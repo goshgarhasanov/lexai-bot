@@ -43,6 +43,7 @@ async def handle_legal_callback(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
 
     texts = {
+        "legal_terms": TERMS_OF_SERVICE,
         "legal_privacy": PRIVACY_POLICY,
         "legal_refund": REFUND_POLICY,
         "legal_rules": RULES,

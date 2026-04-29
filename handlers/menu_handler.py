@@ -99,9 +99,19 @@ async def show_document_types(update: Update, context) -> None:
 
 
 async def handle_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    import logging
+    logger = logging.getLogger(__name__)
     query = update.callback_query
     await query.answer()
     data = query.data
+    try:
+        await _handle_menu_callback_inner(update, context, query, data)
+    except Exception as e:
+        logger.error(f"Menu callback error [{data}]: {e}", exc_info=True)
+        await query.message.reply_text("⚠️ Xəta baş verdi. Yenidən cəhd edin.")
+
+
+async def _handle_menu_callback_inner(update, context, query, data: str) -> None:
 
     if data == "back_main":
         await query.message.reply_text(
