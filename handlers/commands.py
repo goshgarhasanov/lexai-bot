@@ -48,6 +48,20 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         name = user.first_name or "İstifadəçi"
 
+        welcome_keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("⚖️ Hüquqi Sual", callback_data="area_custom"),
+                InlineKeyboardButton("📄 Sənəd Hazırla", callback_data="menu_docs"),
+            ],
+            [
+                InlineKeyboardButton("💼 Planlar", callback_data="menu_plans"),
+                InlineKeyboardButton("📊 Hesabım", callback_data="menu_stats"),
+            ],
+            [
+                InlineKeyboardButton("ℹ️ Kömək & Qaydalar", callback_data="menu_help"),
+            ],
+        ])
+
         await update.message.reply_text(
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"⚖️ *HuquqAI — Hüquqi Süni İntellekt*\n"
@@ -60,10 +74,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             f"├ 📚 Mülki, əmək, ailə, cinayət, torpaq hüququ üzrə analiz\n"
             f"├ 📄 PRO: Ərizə, müqavilə, şikayət sənədləri\n"
             f"└ 🌐 Azərbaycan, Rus, İngilis dil dəstəyi\n\n"
-            f"💬 *Aşağıdakı menyudan seçin və ya sualınızı yazın:*\n\n"
             f"_ℹ️ Bu bot hüquqi məsləhət xidməti deyil. Ciddi hallarda lisenziyalı vəkilə müraciət edin._",
             parse_mode="Markdown",
-            reply_markup=main_menu_keyboard(),
+            reply_markup=welcome_keyboard,
         )
     finally:
         db.close()

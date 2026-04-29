@@ -45,7 +45,7 @@ def main() -> None:
 
     # Callback handlers — spesifik pattern-lər əvvəl gəlməlidir
     app.add_handler(CallbackQueryHandler(handle_legal_callback, pattern="^legal_"))
-    app.add_handler(CallbackQueryHandler(handle_menu_callback, pattern="^(area_|doc_|back_|plan_)"))
+    app.add_handler(CallbackQueryHandler(handle_menu_callback, pattern="^(area_|doc_|back_|plan_|menu_)"))
     app.add_handler(CallbackQueryHandler(handle_callback))
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

@@ -111,6 +111,73 @@ async def handle_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return
 
+    if data == "menu_plans":
+        from handlers.commands import cmd_plans
+        await query.message.reply_text(
+            "💼 *HuquqAI Abunəlik Planları*\n\nPlan haqqında ətraflı məlumat üçün seçin:",
+            parse_mode="Markdown",
+            reply_markup=plans_keyboard(),
+        )
+        return
+
+    if data == "menu_stats":
+        db = SessionLocal()
+        try:
+            from config import config
+            user = get_or_create_user(db, telegram_id=query.from_user.id)
+            limit = config.PLAN_LIMITS.get(user.plan_level, 5)
+            limit_display = "♾ Limitsiz" if limit == -1 else str(limit)
+            remaining = "♾ Limitsiz" if limit == -1 else str(max(0, limit - user.queries_used))
+            plan_icons = {0: "🆓", 1: "📘", 2: "⭐", 3: "🏛"}
+            icon = plan_icons.get(user.plan_level, "🆓")
+            await query.message.reply_text(
+                f"📊 *Hesabınız*\n"
+                f"━━━━━━━━━━━━━━━\n"
+                f"👤 Ad: {user.first_name or '—'}\n"
+                f"{icon} Plan: *{user.plan_name}*\n"
+                f"📨 Bu ay: {user.queries_used} / {limit_display} sorğu\n"
+                f"✅ Qalan: {remaining} sorğu\n"
+                f"🌐 Dil: {(user.language or 'az').upper()}\n"
+                f"📅 Qeydiyyat: {user.created_at.strftime('%d.%m.%Y') if user.created_at else '—'}\n"
+                f"━━━━━━━━━━━━━━━\n"
+                f"_Plan yüksəltmək üçün: /upgrade_",
+                parse_mode="Markdown",
+            )
+        finally:
+            db.close()
+        return
+
+    if data == "menu_help":
+        from handlers.keyboards import help_keyboard
+        await query.message.reply_text(
+            "ℹ️ *Kömək & Hüquqi Sənədlər*\n\nAşağıdan seçin:",
+            parse_mode="Markdown",
+            reply_markup=help_keyboard(),
+        )
+        return
+
+    if data == "menu_docs":
+        db = SessionLocal()
+        try:
+            user = get_or_create_user(db, telegram_id=query.from_user.id)
+            if not user.can_use_documents():
+                await query.message.reply_text(
+                    "📄 *Sənəd Hazırlama*\n\n"
+                    "⭐ Bu funksiya *PRO* planında mövcuddur.\n\n"
+                    "_Qiymət: 24.99$/ay — limitsiz sorğu + sənəd hazırlama_",
+                    parse_mode="Markdown",
+                    reply_markup=plans_keyboard(),
+                )
+            else:
+                await query.message.reply_text(
+                    "📄 *Sənəd Hazırlama*\n\nHansı sənədi hazırlamaq istəyirsiniz?",
+                    parse_mode="Markdown",
+                    reply_markup=document_types_keyboard(),
+                )
+        finally:
+            db.close()
+        return
+
     if data == "area_custom":
         await query.message.reply_text(
             "✏️ Sualınızı yazın, cavab verim:",
