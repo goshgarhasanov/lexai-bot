@@ -52,11 +52,19 @@ def document_types_keyboard() -> InlineKeyboardMarkup:
 
 def plans_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🆓 FREE — Cari Plan", callback_data="plan_info_free")],
-        [InlineKeyboardButton("📘 BASIC — 9.99$/ay", callback_data="plan_info_basic")],
-        [InlineKeyboardButton("⭐ PRO — 24.99$/ay", callback_data="plan_info_pro")],
-        [InlineKeyboardButton("🏛 LAW FIRM — 99.99$/ay", callback_data="plan_info_firm")],
-        [InlineKeyboardButton("💳 Plan Seç & Ödə", callback_data="plan_upgrade")],
+        [InlineKeyboardButton("🆓 FREE — Pulsuz", callback_data="plan_info_free")],
+        [
+            InlineKeyboardButton("📘 BASIC — 9.99$/ay", callback_data="plan_info_basic"),
+            InlineKeyboardButton("✅ Seç", callback_data="pay_method_BASIC"),
+        ],
+        [
+            InlineKeyboardButton("⭐ PRO — 24.99$/ay", callback_data="plan_info_pro"),
+            InlineKeyboardButton("✅ Seç", callback_data="pay_method_PRO"),
+        ],
+        [
+            InlineKeyboardButton("🏛 FIRM — 99.99$/ay", callback_data="plan_info_firm"),
+            InlineKeyboardButton("✅ Seç", callback_data="pay_method_FIRM"),
+        ],
         _BACK,
     ])
 
@@ -101,8 +109,9 @@ def back_to_menu_keyboard() -> InlineKeyboardMarkup:
     ])
 
 
-def plan_detail_keyboard() -> InlineKeyboardMarkup:
+def plan_detail_keyboard(plan: str = "") -> InlineKeyboardMarkup:
+    pay_cb = f"pay_method_{plan}" if plan else "menu_plans"
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("💳 Bu Planı Seç", callback_data="plan_upgrade")],
+        [InlineKeyboardButton("💳 Bu Planı Seç & Ödə", callback_data=pay_cb)],
         [InlineKeyboardButton("🔙 Planlara Qayıt", callback_data="menu_plans")],
     ])

@@ -54,5 +54,11 @@ class Config:
         3: 99.99,
     }
 
+    # Admin
+    ADMIN_TELEGRAM_ID: int = field(default_factory=lambda: int(os.getenv("ADMIN_TELEGRAM_ID", "0")))
+    ADMIN_CARD: str = field(default_factory=lambda: os.getenv("ADMIN_CARD", "4169 7388 9268 3264"))
+    ADMIN_CARD_NAME: str = field(default_factory=lambda: os.getenv("ADMIN_CARD_NAME", "Həsənov Q."))
+    ADMIN_USERNAME: str = field(default_factory=lambda: os.getenv("ADMIN_USERNAME", "@huquqai_support"))
+
 
 config = Config()

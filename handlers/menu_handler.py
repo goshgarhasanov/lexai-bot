@@ -228,10 +228,9 @@ async def _handle_menu_callback_inner(update, context, query, data: str) -> None
 
     if data == "plan_upgrade":
         await query.message.reply_text(
-            "💳 *Plan Yüksəltmə*\n\n"
-            "Ödəniş sistemi tezliklə aktiv olacaq.\n"
-            "Ətraflı: @huquqai_support",
+            "💳 *Plan seçin:*\n\nHansı plana keçmək istəyirsiniz?",
             parse_mode="Markdown",
+            reply_markup=plans_keyboard(),
         )
         return
 
@@ -246,7 +245,7 @@ async def _handle_menu_callback_inner(update, context, query, data: str) -> None
         await query.message.reply_text(
             plan_info.get(plan, "Plan tapılmadı"),
             parse_mode="Markdown",
-            reply_markup=plan_detail_keyboard(),
+            reply_markup=plan_detail_keyboard(plan),
         )
         return
 
