@@ -16,6 +16,7 @@ from handlers import (
     cmd_terms, cmd_privacy, cmd_refund, cmd_rules,
     handle_legal_callback, handle_menu_callback,
 )
+from handlers.voice_handler import handle_voice
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -52,6 +53,8 @@ def main() -> None:
     app.add_handler(CallbackQueryHandler(handle_menu_callback, pattern="^(area_|doc_|back_|plan_|menu_)"))
     app.add_handler(CallbackQueryHandler(handle_callback))
 
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    app.add_handler(MessageHandler(filters.AUDIO, handle_voice))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("HuquqAI botu işə salınır...")

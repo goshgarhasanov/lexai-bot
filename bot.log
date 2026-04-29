@@ -32,3 +32,6 @@ TypeError: ReplyKeyboardMarkup.__init__() got an unexpected keyword argument 'pe
 2026-04-29 12:21:18,538 - __main__ - INFO - HuquqAI botu işə salınır...
 2026-04-29 12:21:18,938 - apscheduler.scheduler - INFO - Scheduler started
 2026-04-29 12:21:18,939 - telegram.ext.Application - INFO - Application started
+2026-04-29 12:36:50,771 - __main__ - INFO - HuquqAI botu işə salınır...
+2026-04-29 12:36:51,148 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-29 12:36:51,149 - telegram.ext.Application - INFO - Application started
