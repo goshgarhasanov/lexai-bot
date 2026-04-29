@@ -2,8 +2,8 @@ TERMS_OF_SERVICE = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚖️ HuquqAI — İSTİFADƏ ŞƏRTLƏRİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 Qüvvəyə minmə tarixi: 01.01.2025
-📋 Versiya: 1.0
+📅 Qüvvəyə minmə tarixi: 29.04.2026
+📋 Versiya: 1.1
 
 Bu Xidmət Müqaviləsi ("Şərtlər") HuquqAI platforması ("Platforma")
 ilə istifadəçi ("Siz") arasındakı hüquqi münasibətləri tənzimləyir.
@@ -144,7 +144,7 @@ PRIVACY_POLICY = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔒 HuquqAI — MƏXFİLİK SİYASƏTİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 Qüvvəyə minmə tarixi: 01.01.2025
+📅 Qüvvəyə minmə tarixi: 29.04.2026
 
 AR "Fərdi məlumatlar haqqında" Qanununa (11.05.2010)
 uyğun olaraq hazırlanmışdır.
@@ -224,7 +224,7 @@ REFUND_POLICY = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💳 HuquqAI — GERİ ÖDƏMƏ SİYASƏTİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 Qüvvəyə minmə tarixi: 01.01.2025
+📅 Qüvvəyə minmə tarixi: 29.04.2026
 
 AR "İstehlakçıların hüquqlarının müdafiəsi haqqında"
 Qanununa (26.09.1995) uyğun olaraq hazırlanmışdır.
