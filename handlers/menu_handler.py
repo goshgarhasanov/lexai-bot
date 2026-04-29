@@ -8,6 +8,7 @@ from handlers.keyboards import (
     back_to_menu_keyboard,
     plans_keyboard,
     help_keyboard,
+    plan_detail_keyboard,
 )
 from database.models import SessionLocal, get_or_create_user
 
@@ -245,7 +246,7 @@ async def _handle_menu_callback_inner(update, context, query, data: str) -> None
         await query.message.reply_text(
             plan_info.get(plan, "Plan tapılmadı"),
             parse_mode="Markdown",
-            reply_markup=plans_keyboard(),
+            reply_markup=plan_detail_keyboard(),
         )
         return
 

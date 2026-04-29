@@ -1,5 +1,7 @@
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
+_BACK = [InlineKeyboardButton("🔙 Geri", callback_data="back_main")]
+
 
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
@@ -32,30 +34,19 @@ def legal_areas_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("🏢 Korporativ Hüquq", callback_data="area_corporate"),
         ],
         [InlineKeyboardButton("✏️ Öz sualımı yazım", callback_data="area_custom")],
+        _BACK,
     ])
 
 
 def document_types_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("📝 İşdən Çıxarma Şikayəti", callback_data="doc_dismissal"),
-        ],
-        [
-            InlineKeyboardButton("🏠 Kirayə Müqaviləsi", callback_data="doc_rent"),
-        ],
-        [
-            InlineKeyboardButton("💔 Boşanma Ərizəsi", callback_data="doc_divorce"),
-        ],
-        [
-            InlineKeyboardButton("📜 Miras İddianamə", callback_data="doc_inheritance"),
-        ],
-        [
-            InlineKeyboardButton("🛒 İstehlakçı Şikayəti", callback_data="doc_consumer"),
-        ],
-        [
-            InlineKeyboardButton("🌍 Torpaq Mübahisəsi", callback_data="doc_land"),
-        ],
-        [InlineKeyboardButton("🔙 Geri", callback_data="back_main")],
+        [InlineKeyboardButton("📝 İşdən Çıxarma Şikayəti", callback_data="doc_dismissal")],
+        [InlineKeyboardButton("🏠 Kirayə Müqaviləsi", callback_data="doc_rent")],
+        [InlineKeyboardButton("💔 Boşanma Ərizəsi", callback_data="doc_divorce")],
+        [InlineKeyboardButton("📜 Miras İddianamə", callback_data="doc_inheritance")],
+        [InlineKeyboardButton("🛒 İstehlakçı Şikayəti", callback_data="doc_consumer")],
+        [InlineKeyboardButton("🌍 Torpaq Mübahisəsi", callback_data="doc_land")],
+        _BACK,
     ])
 
 
@@ -66,6 +57,7 @@ def plans_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("⭐ PRO — 24.99$/ay", callback_data="plan_info_pro")],
         [InlineKeyboardButton("🏛 LAW FIRM — 99.99$/ay", callback_data="plan_info_firm")],
         [InlineKeyboardButton("💳 Plan Seç & Ödə", callback_data="plan_upgrade")],
+        _BACK,
     ])
 
 
@@ -80,6 +72,7 @@ def help_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("📏 Qaydalar", callback_data="legal_rules"),
         ],
         [InlineKeyboardButton("💬 Dəstək: @huquqai_support", url="https://t.me/huquqai_support")],
+        _BACK,
     ])
 
 
@@ -89,4 +82,11 @@ def back_to_menu_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("🔄 Yeni Sual", callback_data="area_custom"),
             InlineKeyboardButton("🏠 Ana Menyu", callback_data="back_main"),
         ]
+    ])
+
+
+def plan_detail_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("💳 Bu Planı Seç", callback_data="plan_upgrade")],
+        [InlineKeyboardButton("🔙 Planlara Qayıt", callback_data="menu_plans")],
     ])

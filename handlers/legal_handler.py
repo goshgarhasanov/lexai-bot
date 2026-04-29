@@ -51,11 +51,14 @@ async def handle_legal_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
     text = texts.get(query.data)
     if text:
-        await _send_long(query.message.reply_text, text)
+        from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+        back_kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Geri", callback_data="menu_help")]])
+        await _send_long(query.message.reply_text, text, reply_markup=back_kb)
 
 
-async def _send_long(send_fn, text: str) -> None:
+async def _send_long(send_fn, text: str, reply_markup=None) -> None:
     chunk_size = 4000
     chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-    for chunk in chunks:
-        await send_fn(chunk)
+    for i, chunk in enumerate(chunks):
+        kb = reply_markup if i == len(chunks) - 1 else None
+        await send_fn(chunk, reply_markup=kb)
