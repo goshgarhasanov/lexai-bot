@@ -115,10 +115,10 @@ async def handle_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 async def _handle_menu_callback_inner(update, context, query, data: str) -> None:
 
     if data == "back_main":
+        from handlers.keyboards import welcome_inline_keyboard
         await query.message.reply_text(
-            "🏠 *Ana Menyu*\n\nAşağıdakı menyudan seçim edin:",
-            parse_mode="Markdown",
-            reply_markup=main_menu_keyboard(),
+            "🏠 Ana Menyu\n\nAşağıdakı menyudan seçim edin:",
+            reply_markup=welcome_inline_keyboard(),
         )
         return
 

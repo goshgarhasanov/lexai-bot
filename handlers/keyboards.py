@@ -76,6 +76,22 @@ def help_keyboard() -> InlineKeyboardMarkup:
     ])
 
 
+def welcome_inline_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("⚖️ Hüquqi Sual", callback_data="area_custom"),
+            InlineKeyboardButton("📄 Sənəd Hazırla", callback_data="menu_docs"),
+        ],
+        [
+            InlineKeyboardButton("💼 Planlar", callback_data="menu_plans"),
+            InlineKeyboardButton("📊 Hesabım", callback_data="menu_stats"),
+        ],
+        [
+            InlineKeyboardButton("ℹ️ Kömək & Qaydalar", callback_data="menu_help"),
+        ],
+    ])
+
+
 def back_to_menu_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [
