@@ -21,7 +21,10 @@ async def _keep_typing(bot, chat_id: int, stop_event: asyncio.Event) -> None:
             await bot.send_chat_action(chat_id=chat_id, action="typing")
         except Exception:
             break
-        await asyncio.sleep(4)
+        try:
+            await asyncio.wait_for(asyncio.shield(stop_event.wait()), timeout=4)
+        except asyncio.TimeoutError:
+            pass
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -31,6 +34,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     db = SessionLocal()
     stop_typing = asyncio.Event()
+
+    # Dərhal typing göndər, sonra loop başlat
+    await context.bot.send_chat_action(chat_id=chat_id, action="typing")
     typing_task = asyncio.create_task(_keep_typing(context.bot, chat_id, stop_typing))
 
     try:
@@ -77,7 +83,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         messages = history + [{"role": "user", "content": user_message}]
 
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             ai_response = await loop.run_in_executor(
                 None, lambda: call_ai(system_prompt, messages, route)
             )
