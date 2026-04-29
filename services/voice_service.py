@@ -1,42 +1,37 @@
 import io
 import logging
-import google.generativeai as genai
 from config import config
 
 logger = logging.getLogger(__name__)
 
-_TRANSCRIBE_PROMPT = (
-    "Bu audio faylı tam dəqiqliklə mətнə çevir. "
-    "Yalnız deyilənləri yaz, heç bir izahat əlavə etmə. "
-    "Dil: Azərbaycan, Rus və ya İngilis ola bilər — hansı dildə danışılıbsa o dildə yaz."
-)
-
 
 async def transcribe_voice(file_bytes: bytes, language: str = "az") -> str | None:
     """
-    Gemini 1.5 Flash ilə ses faylını mətнə çevirir.
-    Ayrıca API açarı tələb etmir — mövcud GOOGLE_API_KEY istifadə olunur.
+    OpenAI Whisper-1 ilə ses faylını mətнə çevirir.
+    Azərbaycan, Rus, İngilis dillərini dəstəkləyir.
     """
-    if not config.GOOGLE_API_KEY:
-        logger.warning("GOOGLE_API_KEY təyin edilməyib")
+    if not config.OPENAI_API_KEY or config.OPENAI_API_KEY == "your_openai_api_key_here":
+        logger.warning("OPENAI_API_KEY təyin edilməyib")
         return None
 
     try:
-        genai.configure(api_key=config.GOOGLE_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 
-        audio_part = {
-            "mime_type": "audio/ogg",
-            "data": file_bytes,
-        }
+        audio_file = io.BytesIO(file_bytes)
+        audio_file.name = "voice.ogg"
 
-        response = model.generate_content([_TRANSCRIBE_PROMPT, audio_part])
-        transcript = response.text.strip() if response.text else None
+        response = await client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            language=language,
+            response_format="text",
+        )
 
-        if transcript:
-            logger.info(f"Gemini transcript [{language}]: {transcript[:120]}")
-        return transcript
+        transcript = response.strip() if isinstance(response, str) else str(response).strip()
+        logger.info(f"Whisper transcript [{language}]: {transcript[:120]}")
+        return transcript or None
 
     except Exception as e:
-        logger.error(f"Gemini transcription error: {e}", exc_info=True)
+        logger.error(f"Whisper error: {e}", exc_info=True)
         return None
