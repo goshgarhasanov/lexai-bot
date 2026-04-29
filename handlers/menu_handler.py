@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
 from handlers.keyboards import (
@@ -236,11 +236,28 @@ async def _handle_menu_callback_inner(update, context, query, data: str) -> None
 
     if data.startswith("plan_info_"):
         plan = data.replace("plan_info_", "").upper()
+
+        if plan == "FREE":
+            await query.message.reply_text(
+                "🆓 *FREE Plan*\n"
+                "━━━━━━━━━━━━━━━\n"
+                "├ Ayda 5 sorğu\n"
+                "├ Ümumi hüquqi məlumat\n"
+                "└ Qısaldılmış cavablar\n\n"
+                "✅ *Bu plan pulsuzdur* — qeydiyyat zamanı avtomatik verilir.\n\n"
+                "_Daha çox funksiya üçün BASIC, PRO və ya FIRM planı seçin._",
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("⬆️ Plana yüksəl", callback_data="menu_plans")],
+                    [InlineKeyboardButton("🔙 Geri", callback_data="menu_plans")],
+                ]),
+            )
+            return
+
         plan_info = {
-            "FREE": "🆓 *FREE Plan*\n├ Ayda 5 sorğu\n├ Ümumi hüquqi məlumat\n└ Qısaldılmış cavablar\n\n_Qiymət: Pulsuz_",
             "BASIC": "📘 *BASIC Plan*\n├ Ayda 100 sorğu\n├ Tam hüquqi analiz\n├ Maddə istinadları\n└ Məhkəmə praktikası\n\n_Qiymət: 9.99$/ay_",
-            "PRO": "⭐ *PRO Plan*\n├ Limitsiz sorğu\n├ Sənəd hazırlama\n├ Məhkəmə strategiyası\n├ Hüquqi xərc analizi\n└ Prioritet cavab\n\n_Qiymət: 24.99$/ay_",
-            "FIRM": "🏛 *LAW FIRM Plan*\n├ Bütün PRO funksiyaları\n├ API çıxışı\n├ Toplu sənəd emalı\n└ Xüsusi konfiqurasiya\n\n_Qiymət: 99.99$/ay_",
+            "PRO":   "⭐ *PRO Plan*\n├ Limitsiz sorğu\n├ Sənəd hazırlama\n├ Məhkəmə strategiyası\n├ Hüquqi xərc analizi\n└ Prioritet cavab\n\n_Qiymət: 24.99$/ay_",
+            "FIRM":  "🏛 *LAW FIRM Plan*\n├ Bütün PRO funksiyaları\n├ API çıxışı\n├ Toplu sənəd emalı\n└ Xüsusi konfiqurasiya\n\n_Qiymət: 99.99$/ay_",
         }
         await query.message.reply_text(
             plan_info.get(plan, "Plan tapılmadı"),
