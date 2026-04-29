@@ -1,3 +1,34 @@
 2026-04-29 12:18:25,229 - __main__ - INFO - HuquqAI botu işə salınır...
 2026-04-29 12:18:25,615 - apscheduler.scheduler - INFO - Scheduler started
 2026-04-29 12:18:25,616 - telegram.ext.Application - INFO - Application started
+2026-04-29 12:20:08,894 - handlers.menu_handler - ERROR - Menu callback error [area_custom]: ReplyKeyboardMarkup.__init__() got an unexpected keyword argument 'persistent'. Did you mean 'is_persistent'?
+Traceback (most recent call last):
+  File "C:\Users\soronto\Desktop\lexai-bot\handlers\menu_handler.py", line 109, in handle_menu_callback
+    await _handle_menu_callback_inner(update, context, query, data)
+  File "C:\Users\soronto\Desktop\lexai-bot\handlers\menu_handler.py", line 195, in _handle_menu_callback_inner
+    reply_markup=main_menu_keyboard(),
+                 ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\soronto\Desktop\lexai-bot\handlers\keyboards.py", line 7, in main_menu_keyboard
+    return ReplyKeyboardMarkup(
+        [
+    ...<5 lines>...
+        persistent=True,
+    )
+TypeError: ReplyKeyboardMarkup.__init__() got an unexpected keyword argument 'persistent'. Did you mean 'is_persistent'?
+2026-04-29 12:20:35,896 - handlers.menu_handler - ERROR - Menu callback error [area_custom]: ReplyKeyboardMarkup.__init__() got an unexpected keyword argument 'persistent'. Did you mean 'is_persistent'?
+Traceback (most recent call last):
+  File "C:\Users\soronto\Desktop\lexai-bot\handlers\menu_handler.py", line 109, in handle_menu_callback
+    await _handle_menu_callback_inner(update, context, query, data)
+  File "C:\Users\soronto\Desktop\lexai-bot\handlers\menu_handler.py", line 195, in _handle_menu_callback_inner
+    reply_markup=main_menu_keyboard(),
+                 ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\soronto\Desktop\lexai-bot\handlers\keyboards.py", line 7, in main_menu_keyboard
+    return ReplyKeyboardMarkup(
+        [
+    ...<5 lines>...
+        persistent=True,
+    )
+TypeError: ReplyKeyboardMarkup.__init__() got an unexpected keyword argument 'persistent'. Did you mean 'is_persistent'?
+2026-04-29 12:21:18,538 - __main__ - INFO - HuquqAI botu işə salınır...
+2026-04-29 12:21:18,938 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-29 12:21:18,939 - telegram.ext.Application - INFO - Application started

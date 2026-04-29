@@ -11,7 +11,7 @@ def main_menu_keyboard() -> ReplyKeyboardMarkup:
             ["🌐 Dil Seçimi", "ℹ️ Kömək"],
         ],
         resize_keyboard=True,
-        persistent=True,
+        is_persistent=True,
     )
 
 
