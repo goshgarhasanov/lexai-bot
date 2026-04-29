@@ -2277,3 +2277,6 @@ Traceback (most recent call last):
   File "C:\Users\soronto\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\request\_baserequest.py", line 382, in _request_wrapper
     raise BadRequest(message)
 telegram.error.BadRequest: Can't parse entities: can't find end of the entity starting at byte offset 490
+2026-04-29 15:41:26,755 - __main__ - INFO - HuquqAI botu işə salınır...
+2026-04-29 15:41:27,169 - apscheduler.scheduler - INFO - Scheduler started
+2026-04-29 15:41:27,169 - telegram.ext.Application - INFO - Application started
