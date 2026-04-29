@@ -19,6 +19,11 @@ from handlers import (
     cmd_language,
     cmd_upgrade,
     handle_callback,
+    cmd_terms,
+    cmd_privacy,
+    cmd_refund,
+    cmd_rules,
+    handle_legal_callback,
 )
 
 logging.basicConfig(
@@ -42,6 +47,11 @@ def main() -> None:
     app.add_handler(CommandHandler("clear", cmd_clear))
     app.add_handler(CommandHandler("language", cmd_language))
     app.add_handler(CommandHandler("upgrade", cmd_upgrade))
+    app.add_handler(CommandHandler("terms", cmd_terms))
+    app.add_handler(CommandHandler("privacy", cmd_privacy))
+    app.add_handler(CommandHandler("refund", cmd_refund))
+    app.add_handler(CommandHandler("rules", cmd_rules))
+    app.add_handler(CallbackQueryHandler(handle_legal_callback, pattern="^legal_"))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 

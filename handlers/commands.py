@@ -54,6 +54,12 @@ Mən sizə Azərbaycan qanunvericiliyi haqqında məlumat verirəm.
 /clear — Söhbəti sıfırla
 /language — Dil seçimi (az/ru/en)
 
+*Hüquqi sənədlər:*
+/terms — İstifadə Şərtləri
+/privacy — Məxfilik Siyasəti
+/refund — Geri Ödəmə Qaydaları
+/rules — İstifadə Qaydaları
+
 *Nümunə suallar:*
 • "İşdən qanunsuz çıxarıldım, nə edə bilərəm?"
 • "Kirayə müqaviləsi nədir?"

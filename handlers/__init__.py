@@ -9,6 +9,13 @@ from handlers.commands import (
     cmd_upgrade,
     handle_callback,
 )
+from handlers.legal_handler import (
+    cmd_terms,
+    cmd_privacy,
+    cmd_refund,
+    cmd_rules,
+    handle_legal_callback,
+)
 
 __all__ = [
     "handle_message",
@@ -20,4 +27,9 @@ __all__ = [
     "cmd_language",
     "cmd_upgrade",
     "handle_callback",
+    "cmd_terms",
+    "cmd_privacy",
+    "cmd_refund",
+    "cmd_rules",
+    "handle_legal_callback",
 ]
