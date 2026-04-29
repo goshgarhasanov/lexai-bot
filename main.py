@@ -11,19 +11,10 @@ from telegram.ext import (
 from config import config
 from handlers import (
     handle_message,
-    cmd_start,
-    cmd_help,
-    cmd_plans,
-    cmd_mystats,
-    cmd_clear,
-    cmd_language,
-    cmd_upgrade,
-    handle_callback,
-    cmd_terms,
-    cmd_privacy,
-    cmd_refund,
-    cmd_rules,
-    handle_legal_callback,
+    cmd_start, cmd_help, cmd_plans, cmd_mystats,
+    cmd_clear, cmd_language, cmd_upgrade, handle_callback,
+    cmd_terms, cmd_privacy, cmd_refund, cmd_rules,
+    handle_legal_callback, handle_menu_callback,
 )
 
 logging.basicConfig(
@@ -51,8 +42,12 @@ def main() -> None:
     app.add_handler(CommandHandler("privacy", cmd_privacy))
     app.add_handler(CommandHandler("refund", cmd_refund))
     app.add_handler(CommandHandler("rules", cmd_rules))
+
+    # Callback handlers — spesifik pattern-lər əvvəl gəlməlidir
     app.add_handler(CallbackQueryHandler(handle_legal_callback, pattern="^legal_"))
+    app.add_handler(CallbackQueryHandler(handle_menu_callback, pattern="^(area_|doc_|back_|plan_)"))
     app.add_handler(CallbackQueryHandler(handle_callback))
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("HuquqAI botu işə salınır...")
