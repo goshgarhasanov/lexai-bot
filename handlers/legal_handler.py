@@ -5,7 +5,7 @@ from legal.terms import TERMS_OF_SERVICE, PRIVACY_POLICY, REFUND_POLICY, RULES
 
 LEGAL_MENU = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 LexAI — Hüquqi Sənədlər
+📋 HuquqAI — Hüquqi Sənədlər
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Aşağıdakı sənədlərdən birini seçin:

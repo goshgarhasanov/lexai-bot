@@ -1,11 +1,11 @@
 TERMS_OF_SERVICE = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚖️ LexAI — İSTİFADƏ ŞƏRTLƏRİ
+⚖️ HuquqAI — İSTİFADƏ ŞƏRTLƏRİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📅 Qüvvəyə minmə tarixi: 01.01.2025
 📋 Versiya: 1.0
 
-Bu Xidmət Müqaviləsi ("Şərtlər") LexAI platforması ("Platforma")
+Bu Xidmət Müqaviləsi ("Şərtlər") HuquqAI platforması ("Platforma")
 ilə istifadəçi ("Siz") arasındakı hüquqi münasibətləri tənzimləyir.
 
 Platformadan istifadə etməklə Siz bu Şərtləri QƏBUL ETMİŞ sayılırsınız.
@@ -14,13 +14,13 @@ Platformadan istifadə etməklə Siz bu Şərtləri QƏBUL ETMİŞ sayılırsın
 📌 1. TƏRƏFLƏRİN TƏRİFİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1.1. "LexAI" — Azərbaycan Respublikasının qanunvericiliyinə uyğun
+1.1. "HuquqAI" — Azərbaycan Respublikasının qanunvericiliyinə uyğun
      olaraq fəaliyyət göstərən süni intellekt hüquq məlumat xidmətidir.
 
 1.2. "İstifadəçi" — Platformaya qoşulan, xidmətlərdən istifadə edən
      hər hansı fiziki şəxsdir.
 
-1.3. "Xidmət" — LexAI Telegram botu vasitəsilə göstərilən hüquqi
+1.3. "Xidmət" — HuquqAI Telegram botu vasitəsilə göstərilən hüquqi
      məlumatlandırma, sənəd şablonu və analiz xidmətlərinin
      məcmusudur.
 
@@ -28,12 +28,12 @@ Platformadan istifadə etməklə Siz bu Şərtləri QƏBUL ETMİŞ sayılırsın
 📌 2. XİDMƏTİN MAHİYYƏTİ VƏ HÜDUDLARİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2.1. LexAI YALNIZ məlumatlandırıcı xarakter daşıyır. Azərbaycan
+2.1. HuquqAI YALNIZ məlumatlandırıcı xarakter daşıyır. Azərbaycan
      Respublikası Vəkillər Kollegiyası haqqında Qanunun (18.04.1997)
      1-ci maddəsinə əsasən, peşəkar hüquqi yardım yalnız vəkil
      tərəfindən göstərilə bilər.
 
-2.2. LexAI-ın verdiyi məlumatlar:
+2.2. HuquqAI-ın verdiyi məlumatlar:
      • Rəsmi hüquqi məsləhət deyildir
      • Məhkəmə qərarını əvəz etmir
      • Vəkil-müvəkkil münasibəti yaratmır
@@ -81,7 +81,7 @@ hüquqi məsuliyyət doğura bilər:
 
 5.1. AR "Müəllif hüququ və əlaqəli hüquqlar haqqında" Qanununa
      (05.06.1996) əsasən Platformanın bütün məzmunu, kod bazası,
-     interfeysi və sənəd şablonları LexAI-ın müstəsna mülkiyyətidir.
+     interfeysi və sənəd şablonları HuquqAI-ın müstəsna mülkiyyətidir.
 
 5.2. İstifadəçi yalnız şəxsi, qeyri-kommersiya məqsədilə istifadə
      hüququna malikdir.
@@ -94,7 +94,7 @@ hüquqi məsuliyyət doğura bilər:
 📌 6. MƏSULİYYƏTİN MƏHDUDLAŞDIRİLMASI
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-6.1. LexAI aşağıdakılara görə məsuliyyət daşımır:
+6.1. HuquqAI aşağıdakılara görə məsuliyyət daşımır:
      • İstifadəçinin Platformadan aldığı məlumata əsaslanaraq
        gördüyü hərəkətlərin nəticəsi
      • Qanunvericiliyin dəyişməsi nəticəsində məlumatın
@@ -110,7 +110,7 @@ hüquqi məsuliyyət doğura bilər:
 📌 7. ŞƏRTLƏRIN DƏYİŞDİRİLMƏSİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-7.1. LexAI bu Şərtləri istənilən vaxt dəyişdirmək hüququna malikdir.
+7.1. HuquqAI bu Şərtləri istənilən vaxt dəyişdirmək hüququna malikdir.
 
 7.2. Əhəmiyyətli dəyişikliklər haqqında istifadəçilərə ən azı
      7 (yeddi) gün əvvəldən bildiriş göndəriləcəkdir.
@@ -136,13 +136,13 @@ hüquqi məsuliyyət doğura bilər:
      Qanununun (26.09.1995) müddəaları tətbiq edilir.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 Əlaqə: @lexai_support
+📞 Əlaqə: @huquqai_support
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
 PRIVACY_POLICY = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 LexAI — MƏXFİLİK SİYASƏTİ
+🔒 HuquqAI — MƏXFİLİK SİYASƏTİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📅 Qüvvəyə minmə tarixi: 01.01.2025
 
@@ -216,13 +216,13 @@ AR "Fərdi məlumatlar haqqında" Qanununun 8-ci maddəsinə əsasən:
      ərzində xəbərdar ediləcəkdir
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 Əlaqə: @lexai_support
+📞 Əlaqə: @huquqai_support
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
 REFUND_POLICY = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💳 LexAI — GERİ ÖDƏMƏ SİYASƏTİ
+💳 HuquqAI — GERİ ÖDƏMƏ SİYASƏTİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📅 Qüvvəyə minmə tarixi: 01.01.2025
 
@@ -233,12 +233,12 @@ Qanununa (26.09.1995) uyğun olaraq hazırlanmışdır.
 📌 1. ÜMUMİ QAYDA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1.1. LexAI abunəlik xidməti rəqəmsal məzmun kateqoriyasına
+1.1. HuquqAI abunəlik xidməti rəqəmsal məzmun kateqoriyasına
      aiddir. AR Mülki Məcəlləsinin 666-cı maddəsinə əsasən
      rəqəmsal xidmətlərə başlandıqdan sonra geri ödəmə ümumi
      qaydada tətbiq edilmir.
 
-1.2. Lakin istifadəçi hüquqlarını qorumaq məqsədilə LexAI
+1.2. Lakin istifadəçi hüquqlarını qorumaq məqsədilə HuquqAI
      aşağıda göstərilən hallarda könüllü geri ödəmə siyasəti
      tətbiq edir.
 
@@ -296,7 +296,7 @@ Formula: Geri ödəmə = (Aylıq məbləğ ÷ 30) × qalan gün sayı
 📌 5. GERİ ÖDƏMƏ PROSEDURİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-5.1. Müraciət: @lexai_support vasitəsilə yazılı şəkildə
+5.1. Müraciət: @huquqai_support vasitəsilə yazılı şəkildə
 
 5.2. Tələb olunan məlumatlar:
      • Telegram istifadəçi ID-niz
@@ -339,17 +339,17 @@ Formula: Geri ödəmə = (Aylıq məbləğ ÷ 30) × qalan gün sayı
 7.3. Avtomatik yenilənmə (auto-renewal) ləğvetmə tarixindən
      ən azı 24 saat əvvəl dayandırılmalıdır
 
-7.4. Ləğvetmə üçün: @lexai_support vasitəsilə müraciət edin
+7.4. Ləğvetmə üçün: @huquqai_support vasitəsilə müraciət edin
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 Əlaqə: @lexai_support
+📞 Əlaqə: @huquqai_support
 🌐 Hüquq: AR qanunvericiliyi
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
 RULES = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 LexAI — İSTİFADƏ QAYDALAR
+📋 HuquqAI — İSTİFADƏ QAYDALAR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Platformamızdan rahat, təhlükəsiz və səmərəli istifadə
@@ -402,7 +402,7 @@ Ağır pozuntular (qanunsuz fəaliyyət, haker hücumu):
 ⚖️ HÜQUQİ XƏBƏRDARLİQ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-LexAI-dan aldığınız məlumat:
+HuquqAI-dan aldığınız məlumat:
 • Hüquqi məsləhət DEYİL — məlumatlandırıcı xarakter daşıyır
 • Konkret iş üçün nəticə zəmanəti VERMİR
 • Hər zaman cari qanunvericilikdə yoxlanılmalıdır
@@ -412,6 +412,6 @@ Ciddi hüquqi məsələlər üçün mütləq
 lisenziyalı vəkilə müraciət edin.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 Şikayət və təklif: @lexai_support
+📞 Şikayət və təklif: @huquqai_support
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """

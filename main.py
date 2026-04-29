@@ -55,7 +55,7 @@ def main() -> None:
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    logger.info("LexAI botu işə salınır...")
+    logger.info("HuquqAI botu işə salınır...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

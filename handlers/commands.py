@@ -6,7 +6,7 @@ from services.memory_service import clear_history
 from config import config
 
 PLANS_TEXT = """
-💼 *LexAI Abunəlik Planları*
+💼 *HuquqAI Abunəlik Planları*
 
 🆓 *FREE* — Pulsuz
 ├── Ayda 5 sorğu
@@ -36,7 +36,7 @@ Plan seçmək üçün: /upgrade
 """
 
 HELP_TEXT = """
-⚖️ *LexAI — Azərbaycan Hüquq Botu*
+⚖️ *HuquqAI — Azərbaycan Hüquq Botu*
 
 Mən sizə Azərbaycan qanunvericiliyi haqqında məlumat verirəm.
 
@@ -83,7 +83,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         name = user.first_name or "İstifadəçi"
         await update.message.reply_text(
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"⚖️ *LexAI — Hüquqi Süni İntellekt*\n"
+            f"⚖️ *HuquqAI — Hüquqi Süni İntellekt*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Hörmətli *{name}*, xoş gəlmisiniz.\n\n"
             f"Mən Azərbaycan Respublikasının qanunvericiliyinə əsaslanaraq "
@@ -161,7 +161,7 @@ async def cmd_upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         "💳 *Plan yüksəltmə*\n\n"
         "Hazırda ödəniş sistemi qurulur.\n"
         "Ətraflı məlumat üçün admin ilə əlaqə saxlayın:\n"
-        "@lexai_support",
+        "@huquqai_support",
         parse_mode="Markdown",
     )
 
