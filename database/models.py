@@ -23,6 +23,7 @@ class User(Base):
     queries_reset_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
+    last_active = Column(DateTime, nullable=True)
 
     def is_limit_reached(self) -> bool:
         from config import config

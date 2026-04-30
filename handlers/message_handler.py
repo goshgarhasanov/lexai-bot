@@ -87,6 +87,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             first_name=telegram_user.first_name,
         )
 
+        from datetime import datetime, timezone as tz
+        user.last_active = datetime.now(tz.utc)
+        db.commit()
+
         if user.is_limit_reached():
             await update.message.reply_text(
                 get_error_message(

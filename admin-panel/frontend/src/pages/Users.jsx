@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
+import { toast } from "../components/Toast";
+import Modal from "../components/Modal";
 
 const PLAN_BADGE = {
   FREE:  "bg-gray-700 text-gray-300",
@@ -19,6 +21,7 @@ export default function Users() {
   const [planFilter, setPlan] = useState("");
   const [loading, setLoading] = useState(false);
   const [upgrading, setUpgrading] = useState(null);
+  const [modal, setModal]         = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -38,33 +41,56 @@ export default function Users() {
   useEffect(() => { setPage(1); load(); }, [search]);
 
   const upgradePlan = async (user, plan) => {
-    if (!confirm(`${user.first_name || user.telegram_id} → ${plan} planına yüksəldilsin?`)) return;
-    setUpgrading(user.id);
-    try {
-      await api.put(`/users/${user.id}/plan`, { plan });
-      load();
-      alert("✅ Plan yüksəldildi!");
-    } catch (e) {
-      alert("❌ Xəta: " + (e.response?.data?.error || e.message));
-    } finally {
-      setUpgrading(null);
-    }
+    setModal({
+      title: "Plan Yüksəlt",
+      message: `${user.first_name || user.telegram_id} → ${plan} planına yüksəldilsin?`,
+      onConfirm: async () => {
+        setModal(null);
+        setUpgrading(user.id);
+        try {
+          await api.put(`/users/${user.id}/plan`, { plan });
+          toast.success("Plan yüksəldildi!");
+          load();
+        } catch (e) {
+          toast.error("Xəta: " + (e.response?.data?.error || e.message));
+        } finally {
+          setUpgrading(null);
+        }
+      },
+    });
   };
 
   const toggleBlock = async (user) => {
-    if (!confirm(`${user.first_name || user.telegram_id} ${user.is_active ? "bloklanacaq" : "blokdan çıxarılacaq"}?`)) return;
-    await api.put(`/users/${user.id}/block`);
-    load();
+    setModal({
+      title: user.is_active ? "İstifadəçini Blokla" : "Blokdan Çıxar",
+      message: `${user.first_name || user.telegram_id} ${user.is_active ? "bloklanacaq" : "blokdan çıxarılacaq"}?`,
+      danger: user.is_active,
+      onConfirm: async () => {
+        setModal(null);
+        await api.put(`/users/${user.id}/block`);
+        toast.success(user.is_active ? "İstifadəçi bloklandı" : "Blok qaldırıldı");
+        load();
+      },
+    });
   };
 
   const resetQueries = async (user) => {
     await api.put(`/users/${user.id}/reset-queries`);
+    toast.info("Sorğular sıfırlandı");
     load();
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <Modal
+        open={!!modal}
+        title={modal?.title}
+        message={modal?.message}
+        danger={modal?.danger}
+        onConfirm={modal?.onConfirm}
+        onCancel={() => setModal(null)}
+      />
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h2 className="text-2xl font-bold text-white">👥 İstifadəçilər ({total})</h2>
         <div className="flex gap-3">
           <input

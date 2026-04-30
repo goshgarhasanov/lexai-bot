@@ -146,10 +146,17 @@ app.post("/api/payments",               auth, apiLimiter, (req, res) => pyProxy(
 app.put("/api/payments/:id/confirm",    auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/payments/${req.params.id}/confirm`));
 app.put("/api/payments/:id/reject",     auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/payments/${req.params.id}/reject`));
 
+// Audit logs, bot stats, payment stats, health, search
+app.get("/api/audit-logs",         auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/audit-logs"));
+app.get("/api/bot-stats",          auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/bot-stats"));
+app.get("/api/payment-stats",      auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/payment-stats"));
+app.get("/api/users/search",       auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/users/search"));
+app.get("/api/health-check",       auth,             (req, res) => pyProxy(req, res, "/admin/health"));
+
 // Ban idarəetməsi (yalnız admin)
 app.get("/api/admin/banned",       auth, (_, res) => res.json(getBannedList()));
 app.delete("/api/admin/ban/:ip",   auth, (req, res) => {
-  unbanIP(req.params.ip);
+  unbanIP(decodeURIComponent(req.params.ip));
   res.json({ success: true, message: `${req.params.ip} ban siyahısından çıxarıldı` });
 });
 
