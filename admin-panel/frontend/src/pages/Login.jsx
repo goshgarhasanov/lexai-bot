@@ -58,12 +58,6 @@ export default function Login() {
           <p className="text-gray-400 text-sm mt-1">Admin Panel</p>
         </div>
 
-        {/* Şifrəli bağlantı badge */}
-        <div className="flex items-center justify-center gap-2 mb-6 text-xs text-green-400 bg-green-950 border border-green-900 rounded-lg px-3 py-1.5">
-          <span>🔒</span>
-          <span>AES-256-GCM şifrəli bağlantı</span>
-        </div>
-
         {/* Ban xəbərdarlığı */}
         {banned && (
           <div className="bg-red-950 border border-red-800 rounded-xl p-4 mb-4 text-center">
