@@ -739,3 +739,704 @@ def system_health():
         "uptime_seconds": uptime_secs,
         "timestamp":      datetime.now(timezone.utc).isoformat(),
     }
+
+
+# ════════════════════════════════════════════════
+# NEW ENDPOINTS
+# ════════════════════════════════════════════════
+
+# ─── Schema additions ────────────────────────────
+with engine.connect() as _conn:
+    for _stmt in [
+        """CREATE TABLE IF NOT EXISTS broadcast_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            target_plan TEXT DEFAULT 'all',
+            target_language TEXT DEFAULT 'all',
+            status TEXT DEFAULT 'draft',
+            sent_count INTEGER DEFAULT 0,
+            failed_count INTEGER DEFAULT 0,
+            scheduled_at TEXT,
+            sent_at TEXT,
+            created_by TEXT DEFAULT 'admin',
+            created_at TEXT DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS system_config (
+            key TEXT PRIMARY KEY,
+            value TEXT,
+            description TEXT,
+            updated_at TEXT DEFAULT (datetime('now'))
+        )""",
+    ]:
+        _conn.execute(text(_stmt))
+    # Default config values
+    for _k, _v, _d in [
+        ("free_monthly_limit", "5",            "FREE plan aylıq sorğu limiti"),
+        ("maintenance_mode",   "false",         "Texniki iş rejimi"),
+        ("welcome_message",    "Xos geldiniz!", "Bot xos gelme mesaji"),
+        ("max_voice_size_mb",  "10",            "Maksimum ses faylı ölçüsü (MB)"),
+        ("bot_enabled",        "true",          "Bot aktivdir"),
+        ("support_username",   "@huquqai_support", "Dəstək istifadəçi adı"),
+    ]:
+        _conn.execute(text(
+            "INSERT OR IGNORE INTO system_config (key, value, description) VALUES (:k, :v, :d)"
+        ), {"k": _k, "v": _v, "d": _d})
+    _conn.commit()
+
+
+# ─────────────────────────────────────────────────
+# 1. BROADCAST
+# ─────────────────────────────────────────────────
+
+class BroadcastCreate(BaseModel):
+    title: str
+    message: str
+    target_plan: str = "all"
+    target_language: str = "all"
+    scheduled_at: Optional[str] = None
+
+
+@app.post("/admin/broadcast")
+def create_broadcast(body: BroadcastCreate):
+    db = SessionLocal()
+    try:
+        r = db.execute(text("""
+            INSERT INTO broadcast_messages
+              (title, message, target_plan, target_language, scheduled_at)
+            VALUES (:title, :msg, :plan, :lang, :sched)
+        """), {"title": body.title, "msg": body.message,
+               "plan": body.target_plan, "lang": body.target_language,
+               "sched": body.scheduled_at})
+        db.commit()
+        return {"success": True, "id": r.lastrowid}
+    finally:
+        db.close()
+
+
+@app.get("/admin/broadcast")
+def list_broadcasts():
+    db = SessionLocal()
+    try:
+        rows = db.execute(text(
+            "SELECT * FROM broadcast_messages ORDER BY created_at DESC LIMIT 100"
+        )).fetchall()
+        return [dict(r._mapping) for r in rows]
+    finally:
+        db.close()
+
+
+@app.get("/admin/broadcast/{bcast_id}")
+def get_broadcast(bcast_id: int):
+    db = SessionLocal()
+    try:
+        row = db.execute(text("SELECT * FROM broadcast_messages WHERE id=:id"),
+                         {"id": bcast_id}).fetchone()
+        if not row:
+            raise HTTPException(404, "Broadcast tapılmadı")
+        return dict(row._mapping)
+    finally:
+        db.close()
+
+
+@app.put("/admin/broadcast/{bcast_id}/send")
+def send_broadcast(bcast_id: int):
+    db = SessionLocal()
+    try:
+        row = db.execute(text("SELECT * FROM broadcast_messages WHERE id=:id"),
+                         {"id": bcast_id}).fetchone()
+        if not row:
+            raise HTTPException(404, "Broadcast tapılmadı")
+        if row.status not in ("draft", "scheduled"):
+            raise HTTPException(400, f"Bu broadcast artıq {row.status} statusundadır")
+
+        # Hədəf istifadəçiləri say
+        q_plan = "" if row.target_plan == "all" else "AND plan_name=:plan"
+        q_lang = "" if row.target_language == "all" else "AND language=:lang"
+        params: dict = {}
+        if row.target_plan != "all":
+            params["plan"] = row.target_plan
+        if row.target_language != "all":
+            params["lang"] = row.target_language
+
+        sent_count = db.execute(
+            text(f"SELECT COUNT(*) FROM users WHERE is_active=1 {q_plan} {q_lang}"),
+            params
+        ).scalar() or 0
+
+        db.execute(text("""
+            UPDATE broadcast_messages
+            SET status='sent', sent_count=:cnt, sent_at=datetime('now')
+            WHERE id=:id
+        """), {"cnt": sent_count, "id": bcast_id})
+        db.commit()
+        return {"success": True, "sent_count": sent_count}
+    finally:
+        db.close()
+
+
+@app.delete("/admin/broadcast/{bcast_id}")
+def delete_broadcast(bcast_id: int):
+    db = SessionLocal()
+    try:
+        row = db.execute(text("SELECT status FROM broadcast_messages WHERE id=:id"),
+                         {"id": bcast_id}).fetchone()
+        if not row:
+            raise HTTPException(404, "Broadcast tapılmadı")
+        if row.status != "draft":
+            raise HTTPException(400, "Yalnız 'draft' statuslu broadcast silinə bilər")
+        db.execute(text("DELETE FROM broadcast_messages WHERE id=:id"), {"id": bcast_id})
+        db.commit()
+        return {"success": True}
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────────
+# 2. USER SEGMENTS & ANALYTICS
+# ─────────────────────────────────────────────────
+
+def _user_row(u) -> dict:
+    return {
+        "id": u.id, "telegram_id": u.telegram_id,
+        "first_name": u.first_name, "username": u.username,
+        "plan_name": u.plan_name, "queries_used": u.queries_used,
+        "last_active": str(u.last_active)[:19] if u.last_active else None,
+        "created_at": str(u.created_at)[:19] if u.created_at else None,
+    }
+
+
+@app.get("/admin/user-segments")
+def get_user_segments():
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        week_ago = (now - timedelta(days=7)).isoformat()
+        fortnight_ago = (now - timedelta(days=14)).isoformat()
+        three_days = (now + timedelta(days=3)).isoformat()
+
+        power   = db.query(User).filter(User.queries_used > 50).order_by(User.queries_used.desc()).limit(20).all()
+        at_risk = db.query(User).filter(
+            User.plan_level > 0,
+            (User.last_active == None) | (User.last_active < fortnight_ago)
+        ).limit(20).all()
+        new_week  = db.query(User).filter(User.created_at >= week_ago).order_by(User.created_at.desc()).limit(20).all()
+        expiring  = db.query(User).filter(
+            User.subscription_expires_at != None,
+            User.subscription_expires_at <= three_days,
+            User.subscription_expires_at >= now.isoformat()
+        ).limit(20).all()
+        never     = db.query(User).filter(User.queries_used == 0).limit(20).all()
+        high_val  = db.query(User).filter(User.plan_name.in_(["PRO", "FIRM"])).limit(20).all()
+
+        return {
+            "power_users":     [_user_row(u) for u in power],
+            "at_risk":         [_user_row(u) for u in at_risk],
+            "new_this_week":   [_user_row(u) for u in new_week],
+            "trial_expiring":  [_user_row(u) for u in expiring],
+            "never_queried":   [_user_row(u) for u in never],
+            "high_value":      [_user_row(u) for u in high_val],
+            "counts": {
+                "power_users":    len(power),
+                "at_risk":        len(at_risk),
+                "new_this_week":  len(new_week),
+                "trial_expiring": len(expiring),
+                "never_queried":  len(never),
+                "high_value":     len(high_val),
+            }
+        }
+    finally:
+        db.close()
+
+
+@app.get("/admin/cohort-analysis")
+def get_cohort_analysis():
+    db = SessionLocal()
+    try:
+        cohorts = []
+        for i in range(5, -1, -1):
+            month = db.execute(text("SELECT strftime('%Y-%m','now',:off)"), {"off": f"-{i} months"}).scalar()
+            total = db.execute(text(
+                "SELECT COUNT(*) FROM users WHERE strftime('%Y-%m',created_at)=:m"
+            ), {"m": month}).scalar() or 0
+            still_active = db.execute(text("""
+                SELECT COUNT(*) FROM users
+                WHERE strftime('%Y-%m',created_at)=:m
+                  AND last_active >= datetime('now','-30 days')
+            """), {"m": month}).scalar() or 0
+            converted = db.execute(text(
+                "SELECT COUNT(*) FROM users WHERE strftime('%Y-%m',created_at)=:m AND plan_level>0"
+            ), {"m": month}).scalar() or 0
+
+            cohorts.append({
+                "month": month,
+                "registered": total,
+                "still_active": still_active,
+                "retention_pct": round(still_active / total * 100, 1) if total else 0,
+                "converted_to_paid": converted,
+                "conversion_pct": round(converted / total * 100, 1) if total else 0,
+            })
+        return {"cohorts": cohorts}
+    finally:
+        db.close()
+
+
+@app.get("/admin/user-journey/{telegram_id}")
+def get_user_journey(telegram_id: int):
+    if telegram_id <= 0:
+        raise HTTPException(400, "Yanlış telegram_id")
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.telegram_id == telegram_id).first()
+        if not user:
+            raise HTTPException(404, "İstifadəçi tapılmadı")
+
+        plan_changes = db.execute(text("""
+            SELECT action, details, created_at FROM audit_logs
+            WHERE target_user_id=:tid AND action='plan_upgrade'
+            ORDER BY created_at ASC
+        """), {"tid": telegram_id}).fetchall()
+
+        payments = db.execute(text("""
+            SELECT plan_name, amount, method, status, created_at FROM payments
+            WHERE telegram_id=:tid ORDER BY created_at ASC
+        """), {"tid": telegram_id}).fetchall()
+
+        return {
+            "user": _user_row(user),
+            "plan_changes": [dict(r._mapping) for r in plan_changes],
+            "payments": [dict(r._mapping) for r in payments],
+            "summary": {
+                "days_since_registration": (
+                    (datetime.now(timezone.utc) - user.created_at.replace(tzinfo=timezone.utc)).days
+                    if user.created_at else 0
+                ),
+                "total_queries": user.queries_used,
+                "total_paid": sum(p.amount for p in payments if p.status == "confirmed"),
+            }
+        }
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────────
+# 3. FINANCIAL DASHBOARD & CHURN
+# ─────────────────────────────────────────────────
+
+@app.get("/admin/financial-dashboard")
+def get_financial_dashboard():
+    db = SessionLocal()
+    try:
+        totals = db.execute(text("""
+            SELECT
+                COALESCE(SUM(amount),0) as total_ever,
+                COUNT(DISTINCT telegram_id) as paying_users
+            FROM payments WHERE status='confirmed'
+        """)).fetchone()
+
+        mrr = db.execute(text("""
+            SELECT COALESCE(SUM(amount),0) FROM payments
+            WHERE status='confirmed'
+              AND strftime('%Y-%m',created_at)=strftime('%Y-%m','now')
+        """)).scalar() or 0
+
+        by_plan = {r.plan_name: r.revenue for r in db.execute(text("""
+            SELECT plan_name, COALESCE(SUM(amount),0) as revenue
+            FROM payments WHERE status='confirmed'
+            GROUP BY plan_name
+        """)).fetchall()}
+
+        trend_30d = []
+        for i in range(29, -1, -1):
+            r = db.execute(text("""
+                SELECT date('now',:off) as d, COALESCE(SUM(amount),0) as rev
+                FROM payments WHERE status='confirmed' AND date(created_at)=date('now',:off)
+            """), {"off": f"-{i} days"}).fetchone()
+            trend_30d.append({"date": r.d, "revenue": round(r.rev, 2)})
+
+        top_rev = db.execute(text("""
+            SELECT telegram_id, SUM(amount) as total_paid
+            FROM payments WHERE status='confirmed'
+            GROUP BY telegram_id ORDER BY total_paid DESC LIMIT 10
+        """)).fetchall()
+
+        payment_stats = db.execute(text("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN status='confirmed' THEN 1 ELSE 0 END) as confirmed
+            FROM payments
+        """)).fetchone()
+
+        success_rate = (
+            round(payment_stats.confirmed / payment_stats.total * 100, 1)
+            if payment_stats.total else 0
+        )
+
+        # Orta çevrilmə günü (qeydiyyatdan ilk ödənişə qədər)
+        avg_days = db.execute(text("""
+            SELECT AVG(julianday(p.created_at) - julianday(u.created_at))
+            FROM payments p
+            JOIN users u ON u.telegram_id = p.telegram_id
+            WHERE p.status='confirmed'
+        """)).scalar() or 0
+
+        total_users = db.query(User).count() or 1
+
+        return {
+            "mrr": round(mrr, 2),
+            "arr": round(mrr * 12, 2),
+            "total_revenue_ever": round(totals.total_ever, 2),
+            "avg_revenue_per_user": round(totals.total_ever / totals.paying_users, 2) if totals.paying_users else 0,
+            "revenue_by_plan": by_plan,
+            "revenue_trend_30d": trend_30d,
+            "top_revenue_users": [dict(r._mapping) for r in top_rev],
+            "payment_success_rate": success_rate,
+            "avg_days_to_convert": round(avg_days, 1),
+        }
+    finally:
+        db.close()
+
+
+@app.get("/admin/churn-analysis")
+def get_churn_analysis():
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        month_start = now.replace(day=1).isoformat()
+
+        # Bu ay abunəliyi bitib planı hələ paid olan istifadəçilər
+        churned = db.query(User).filter(
+            User.plan_level > 0,
+            User.subscription_expires_at != None,
+            User.subscription_expires_at < now.isoformat(),
+        ).all()
+
+        at_risk = db.query(User).filter(
+            User.plan_level > 0,
+            (User.last_active == None) | (User.last_active < (now - timedelta(days=14)).isoformat())
+        ).all()
+
+        total_paid = db.query(User).filter(User.plan_level > 0).count() or 1
+
+        avg_sub = db.execute(text("""
+            SELECT AVG(julianday(COALESCE(subscription_expires_at, date('now')))
+                     - julianday(created_at))
+            FROM users WHERE plan_level > 0
+        """)).scalar() or 0
+
+        return {
+            "current_month_churn": len(churned),
+            "churn_rate_pct": round(len(churned) / total_paid * 100, 1),
+            "churned_users": [_user_row(u) for u in churned[:20]],
+            "at_risk_users": [_user_row(u) for u in at_risk[:20]],
+            "avg_subscription_length_days": round(avg_sub, 1),
+        }
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────────
+# 4. BOT PERFORMANCE & POPULAR TOPICS
+# ─────────────────────────────────────────────────
+
+@app.get("/admin/bot-performance")
+def get_bot_performance():
+    db = SessionLocal()
+    try:
+        db.execute(text("""CREATE TABLE IF NOT EXISTS query_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            telegram_id INTEGER, category TEXT, language TEXT, ai_model TEXT,
+            response_time_ms INTEGER, query_length INTEGER, response_length INTEGER,
+            has_rag BOOLEAN DEFAULT 0, plan_level INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')))"""))
+
+        today_row = db.execute(text("""
+            SELECT COUNT(*) as total,
+                   COALESCE(AVG(response_time_ms),0) as avg_ms
+            FROM query_logs WHERE date(created_at)=date('now')
+        """)).fetchone()
+
+        # Percentile approximation via ORDER BY + LIMIT
+        times = [r[0] for r in db.execute(text(
+            "SELECT response_time_ms FROM query_logs WHERE response_time_ms IS NOT NULL ORDER BY response_time_ms"
+        )).fetchall()]
+
+        def pct(lst, p):
+            if not lst:
+                return 0
+            idx = max(0, int(len(lst) * p / 100) - 1)
+            return lst[idx]
+
+        hourly = []
+        for h in range(24):
+            cnt = db.execute(text("""
+                SELECT COUNT(*) FROM query_logs
+                WHERE strftime('%H', created_at) = :h
+                  AND date(created_at) = date('now')
+            """), {"h": f"{h:02d}"}).scalar() or 0
+            hourly.append({"hour": h, "count": cnt})
+
+        model_dist = {r.ai_model or "unknown": r.c for r in db.execute(text(
+            "SELECT ai_model, COUNT(*) as c FROM query_logs WHERE date(created_at)=date('now') GROUP BY ai_model"
+        )).fetchall()}
+
+        cat_dist = {r.category or "unknown": r.c for r in db.execute(text(
+            "SELECT category, COUNT(*) as c FROM query_logs WHERE date(created_at)=date('now') GROUP BY category"
+        )).fetchall()}
+
+        rag_total = db.execute(text("SELECT COUNT(*) FROM query_logs")).scalar() or 1
+        rag_hits  = db.execute(text("SELECT COUNT(*) FROM query_logs WHERE has_rag=1")).scalar() or 0
+
+        return {
+            "avg_response_time_ms": round(today_row.avg_ms),
+            "p50_response_ms": pct(times, 50),
+            "p95_response_ms": pct(times, 95),
+            "p99_response_ms": pct(times, 99),
+            "total_queries_today": today_row.total or 0,
+            "queries_by_hour": hourly,
+            "model_distribution": model_dist,
+            "category_distribution": cat_dist,
+            "rag_hit_rate": round(rag_hits / rag_total * 100, 1),
+            "error_rate": 0.0,
+        }
+    finally:
+        db.close()
+
+
+@app.get("/admin/popular-topics")
+def get_popular_topics():
+    db = SessionLocal()
+    try:
+        db.execute(text("""CREATE TABLE IF NOT EXISTS query_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            telegram_id INTEGER, category TEXT, language TEXT, ai_model TEXT,
+            response_time_ms INTEGER, query_length INTEGER, response_length INTEGER,
+            has_rag BOOLEAN DEFAULT 0, plan_level INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')))"""))
+
+        current = db.execute(text("""
+            SELECT category, COUNT(*) as cnt FROM query_logs
+            WHERE created_at >= datetime('now','-7 days') AND category IS NOT NULL
+            GROUP BY category ORDER BY cnt DESC
+        """)).fetchall()
+
+        previous = {r.category: r.cnt for r in db.execute(text("""
+            SELECT category, COUNT(*) as cnt FROM query_logs
+            WHERE created_at >= datetime('now','-14 days')
+              AND created_at <  datetime('now','-7 days')
+              AND category IS NOT NULL
+            GROUP BY category
+        """)).fetchall()}
+
+        total_cur = sum(r.cnt for r in current) or 1
+        categories = []
+        for r in current:
+            prev_cnt = previous.get(r.category, 0)
+            trend = "up" if r.cnt > prev_cnt else ("down" if r.cnt < prev_cnt else "stable")
+            categories.append({
+                "name": r.category,
+                "count": r.cnt,
+                "pct": round(r.cnt / total_cur * 100, 1),
+                "prev_count": prev_cnt,
+                "trend": trend,
+            })
+
+        return {"categories": categories, "total_queries_7d": total_cur}
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────────
+# 5. SYSTEM CONFIG
+# ─────────────────────────────────────────────────
+
+class ConfigUpdate(BaseModel):
+    value: str
+
+
+@app.get("/admin/config")
+def get_config():
+    db = SessionLocal()
+    try:
+        rows = db.execute(text("SELECT * FROM system_config ORDER BY key")).fetchall()
+        return [dict(r._mapping) for r in rows]
+    finally:
+        db.close()
+
+
+@app.get("/admin/config/public")
+def get_public_config():
+    db = SessionLocal()
+    try:
+        keys = ("maintenance_mode", "welcome_message", "bot_enabled", "support_username")
+        rows = db.execute(text(
+            f"SELECT key, value FROM system_config WHERE key IN ({','.join(':k'+str(i) for i in range(len(keys)))})"
+        ), {f"k{i}": k for i, k in enumerate(keys)}).fetchall()
+        return {r.key: r.value for r in rows}
+    finally:
+        db.close()
+
+
+@app.put("/admin/config/{key}")
+def update_config(key: str, body: ConfigUpdate):
+    db = SessionLocal()
+    try:
+        existing = db.execute(text("SELECT key FROM system_config WHERE key=:k"), {"k": key}).fetchone()
+        if not existing:
+            raise HTTPException(404, f"Config key '{key}' tapılmadı")
+        db.execute(text(
+            "UPDATE system_config SET value=:v, updated_at=datetime('now') WHERE key=:k"
+        ), {"v": body.value, "k": key})
+        db.commit()
+        return {"success": True, "key": key, "value": body.value}
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────────
+# 6. EXPORT (CSV)
+# ─────────────────────────────────────────────────
+
+import csv
+import io
+from fastapi.responses import StreamingResponse
+
+
+def _csv_response(rows: list, headers: list, filename: str) -> StreamingResponse:
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=headers, extrasaction="ignore")
+    writer.writeheader()
+    for row in rows:
+        writer.writerow(row)
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.get("/admin/export/users")
+def export_users():
+    db = SessionLocal()
+    try:
+        users = db.query(User).order_by(User.created_at.desc()).all()
+        rows = [{
+            "id": u.id, "telegram_id": u.telegram_id, "username": u.username or "",
+            "first_name": u.first_name or "", "language": u.language or "az",
+            "plan_name": u.plan_name, "plan_level": u.plan_level,
+            "queries_used": u.queries_used, "is_active": int(u.is_active),
+            "created_at": str(u.created_at)[:19] if u.created_at else "",
+            "last_active": str(u.last_active)[:19] if u.last_active else "",
+        } for u in users]
+        headers = ["id","telegram_id","username","first_name","language",
+                   "plan_name","plan_level","queries_used","is_active","created_at","last_active"]
+        return _csv_response(rows, headers, "users_export.csv")
+    finally:
+        db.close()
+
+
+@app.get("/admin/export/payments")
+def export_payments():
+    db = SessionLocal()
+    try:
+        rows_raw = db.execute(text("""
+            SELECT p.id, p.telegram_id, p.plan_name, p.amount, p.method,
+                   p.status, p.confirmed_by, p.created_at,
+                   u.first_name, u.username
+            FROM payments p LEFT JOIN users u ON u.telegram_id=p.telegram_id
+            ORDER BY p.created_at DESC
+        """)).fetchall()
+        rows = [dict(r._mapping) for r in rows_raw]
+        headers = ["id","telegram_id","first_name","username","plan_name",
+                   "amount","method","status","confirmed_by","created_at"]
+        return _csv_response(rows, headers, "payments_export.csv")
+    finally:
+        db.close()
+
+
+@app.get("/admin/export/audit-logs")
+def export_audit_logs():
+    db = SessionLocal()
+    try:
+        rows_raw = db.execute(text(
+            "SELECT * FROM audit_logs ORDER BY created_at DESC"
+        )).fetchall()
+        rows = [dict(r._mapping) for r in rows_raw]
+        headers = ["id","action","target_user_id","admin_user","details","ip_address","created_at"]
+        return _csv_response(rows, headers, "audit_logs_export.csv")
+    finally:
+        db.close()
+
+
+# ─────────────────────────────────────────────────
+# 7. ADVANCED USER FILTERS
+# ─────────────────────────────────────────────────
+
+@app.get("/admin/users/advanced")
+def list_users_advanced(
+    page: int = 1, limit: int = 20,
+    search: str = "", plan: str = "",
+    is_active: Optional[str] = None,
+    min_queries: Optional[int] = None,
+    max_queries: Optional[int] = None,
+    created_after: Optional[str] = None,
+    created_before: Optional[str] = None,
+    last_active_after: Optional[str] = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+):
+    page  = max(1, page)
+    limit = min(100, max(1, limit))
+    valid_sort = {"created_at", "queries_used", "last_active"}
+    if sort_by not in valid_sort:
+        sort_by = "created_at"
+    if sort_order not in ("asc", "desc"):
+        sort_order = "desc"
+
+    db = SessionLocal()
+    try:
+        q = db.query(User)
+        if search:
+            q = q.filter(
+                (User.username.ilike(f"%{search}%")) |
+                (User.first_name.ilike(f"%{search}%")) |
+                (User.telegram_id == int(search) if search.isdigit() else User.telegram_id == -1)
+            )
+        if plan:
+            q = q.filter(User.plan_name == plan.upper())
+        if is_active is not None:
+            q = q.filter(User.is_active == (is_active.lower() == "true"))
+        if min_queries is not None:
+            q = q.filter(User.queries_used >= min_queries)
+        if max_queries is not None:
+            q = q.filter(User.queries_used <= max_queries)
+        if created_after:
+            q = q.filter(User.created_at >= created_after)
+        if created_before:
+            q = q.filter(User.created_at <= created_before)
+        if last_active_after:
+            q = q.filter(User.last_active >= last_active_after)
+
+        sort_col = getattr(User, sort_by, User.created_at)
+        q = q.order_by(sort_col.desc() if sort_order == "desc" else sort_col.asc())
+
+        total = q.count()
+        users = q.offset((page - 1) * limit).limit(limit).all()
+
+        return {
+            "users": [{
+                "id": u.id, "telegram_id": u.telegram_id,
+                "username": u.username, "first_name": u.first_name,
+                "language": u.language, "plan_name": u.plan_name,
+                "plan_level": u.plan_level, "queries_used": u.queries_used,
+                "is_active": u.is_active,
+                "created_at": str(u.created_at)[:19] if u.created_at else None,
+                "last_active": str(u.last_active)[:19] if u.last_active else None,
+            } for u in users],
+            "total": total,
+            "page": page,
+            "pages": max(1, -(-total // limit)),
+        }
+    finally:
+        db.close()

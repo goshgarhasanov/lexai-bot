@@ -63,6 +63,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     telegram_user = update.effective_user
     chat_id = update.effective_chat.id
 
+    # Enforce message length limit
+    if len(user_message) > 4000:
+        await update.message.reply_text(
+            "⚠️ Mesajınız çox uzundur. Zəhmət olmasa 4000 simvoldan qısa yazın.",
+            reply_markup=main_menu_keyboard(),
+        )
+        return
+
     # Persistent menu button routing
     menu_routes = {
         "⚖️ Hüquqi Sual":       ("handlers.menu_handler", "show_legal_areas"),

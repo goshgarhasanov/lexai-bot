@@ -159,6 +159,37 @@ app.get("/api/revenue-stats",  auth, apiLimiter, (req, res) => pyProxy(req, res,
 app.get("/api/user-activity",  auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/user-activity"));
 app.get("/api/retention",      auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/retention"));
 
+// Broadcast
+app.get("/api/broadcast",           auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/broadcast"));
+app.post("/api/broadcast",          auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/broadcast"));
+app.get("/api/broadcast/:id",       auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/broadcast/${req.params.id}`));
+app.put("/api/broadcast/:id/send",  auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/broadcast/${req.params.id}/send`));
+app.delete("/api/broadcast/:id",    auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/broadcast/${req.params.id}`));
+
+// User analytics
+app.get("/api/user-segments",    auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/user-segments"));
+app.get("/api/cohort-analysis",  auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/cohort-analysis"));
+app.get("/api/user-journey/:id", auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/user-journey/${req.params.id}`));
+app.get("/api/users/advanced",   auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/users/advanced"));
+
+// Financial
+app.get("/api/financial-dashboard", auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/financial-dashboard"));
+app.get("/api/churn-analysis",      auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/churn-analysis"));
+
+// Bot performance
+app.get("/api/bot-performance",  auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/bot-performance"));
+app.get("/api/popular-topics",   auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/popular-topics"));
+
+// Config
+app.get("/api/config",         auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/config"));
+app.get("/api/config/public",  (req, res) => pyProxy(req, res, "/admin/config/public"));
+app.put("/api/config/:key",    auth, apiLimiter, (req, res) => pyProxy(req, res, `/admin/config/${req.params.key}`));
+
+// Export
+app.get("/api/export/users",       auth, (req, res) => pyProxy(req, res, "/admin/export/users"));
+app.get("/api/export/payments",    auth, (req, res) => pyProxy(req, res, "/admin/export/payments"));
+app.get("/api/export/audit-logs",  auth, (req, res) => pyProxy(req, res, "/admin/export/audit-logs"));
+
 // Ban idarəetməsi (yalnız admin)
 app.get("/api/admin/banned",       auth, (_, res) => res.json(getBannedList()));
 app.delete("/api/admin/ban/:ip",   auth, (req, res) => {

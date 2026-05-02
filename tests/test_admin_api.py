@@ -599,3 +599,356 @@ class TestRetention:
     def test_plan_queries_fields(self):
         for p in client.get("/admin/retention").json()["plan_queries"][:2]:
             assert "plan_name" in p and "avg_q" in p
+
+
+# ══════════════════════════════════════════════
+# 12. BROADCAST
+# ══════════════════════════════════════════════
+class TestBroadcast:
+    def _create(self, title="Test Broadcast", plan="all"):
+        return client.post("/admin/broadcast", json={
+            "title": title, "message": "Test mesaji", "target_plan": plan
+        }).json()
+
+    def test_list_200(self):
+        assert client.get("/admin/broadcast").status_code == 200
+
+    def test_list_returns_list(self):
+        assert isinstance(client.get("/admin/broadcast").json(), list)
+
+    def test_create_returns_id(self):
+        r = self._create()
+        assert "id" in r and r["id"] > 0
+
+    def test_create_missing_title_422(self):
+        assert client.post("/admin/broadcast", json={"message": "x"}).status_code == 422
+
+    def test_create_missing_message_422(self):
+        assert client.post("/admin/broadcast", json={"title": "x"}).status_code == 422
+
+    def test_get_by_id(self):
+        bid = self._create("Detail Test")["id"]
+        r = client.get(f"/admin/broadcast/{bid}")
+        assert r.status_code == 200
+        assert r.json()["title"] == "Detail Test"
+
+    def test_get_nonexistent_404(self):
+        assert client.get("/admin/broadcast/99999999").status_code == 404
+
+    def test_send_draft_succeeds(self):
+        bid = self._create("Send Test")["id"]
+        r = client.put(f"/admin/broadcast/{bid}/send")
+        assert r.status_code == 200
+        assert r.json()["success"] is True
+        assert "sent_count" in r.json()
+
+    def test_send_already_sent_400(self):
+        bid = self._create("Send Again")["id"]
+        client.put(f"/admin/broadcast/{bid}/send")
+        assert client.put(f"/admin/broadcast/{bid}/send").status_code == 400
+
+    def test_delete_draft(self):
+        bid = self._create("Delete Me")["id"]
+        r = client.delete(f"/admin/broadcast/{bid}")
+        assert r.status_code == 200
+
+    def test_delete_sent_broadcast_400(self):
+        bid = self._create("Sent Before Delete")["id"]
+        client.put(f"/admin/broadcast/{bid}/send")
+        assert client.delete(f"/admin/broadcast/{bid}").status_code == 400
+
+    def test_delete_nonexistent_404(self):
+        assert client.delete("/admin/broadcast/99999999").status_code == 404
+
+    def test_send_with_plan_filter(self):
+        bid = self._create("PRO Only", plan="PRO")["id"]
+        r = client.put(f"/admin/broadcast/{bid}/send")
+        assert r.status_code == 200
+
+
+# ══════════════════════════════════════════════
+# 13. USER SEGMENTS
+# ══════════════════════════════════════════════
+class TestUserSegments:
+    def test_200(self):
+        assert client.get("/admin/user-segments").status_code == 200
+
+    def test_has_all_segments(self):
+        data = client.get("/admin/user-segments").json()
+        for seg in ["power_users","at_risk","new_this_week","trial_expiring","never_queried","high_value","counts"]:
+            assert seg in data
+
+    def test_counts_dict(self):
+        counts = client.get("/admin/user-segments").json()["counts"]
+        for k in ["power_users","at_risk","new_this_week","never_queried","high_value"]:
+            assert isinstance(counts[k], int) and counts[k] >= 0
+
+    def test_segments_are_lists(self):
+        data = client.get("/admin/user-segments").json()
+        for seg in ["power_users","at_risk","new_this_week","never_queried","high_value"]:
+            assert isinstance(data[seg], list)
+
+
+# ══════════════════════════════════════════════
+# 14. COHORT ANALYSIS
+# ══════════════════════════════════════════════
+class TestCohortAnalysis:
+    def test_200(self):
+        assert client.get("/admin/cohort-analysis").status_code == 200
+
+    def test_has_cohorts(self):
+        data = client.get("/admin/cohort-analysis").json()
+        assert "cohorts" in data
+        assert len(data["cohorts"]) == 6
+
+    def test_cohort_fields(self):
+        for c in client.get("/admin/cohort-analysis").json()["cohorts"]:
+            for f in ["month","registered","still_active","retention_pct","converted_to_paid","conversion_pct"]:
+                assert f in c
+
+    def test_retention_pct_0_to_100(self):
+        for c in client.get("/admin/cohort-analysis").json()["cohorts"]:
+            assert 0 <= c["retention_pct"] <= 100
+
+
+# ══════════════════════════════════════════════
+# 15. USER JOURNEY
+# ══════════════════════════════════════════════
+class TestUserJourney:
+    def test_valid_user(self):
+        tid = client.get("/admin/users?limit=1").json()["users"][0]["telegram_id"]
+        r = client.get(f"/admin/user-journey/{tid}")
+        assert r.status_code == 200
+
+    def test_journey_fields(self):
+        tid = client.get("/admin/users?limit=1").json()["users"][0]["telegram_id"]
+        data = client.get(f"/admin/user-journey/{tid}").json()
+        for f in ["user","plan_changes","payments","summary"]:
+            assert f in data
+
+    def test_summary_fields(self):
+        tid = client.get("/admin/users?limit=1").json()["users"][0]["telegram_id"]
+        summary = client.get(f"/admin/user-journey/{tid}").json()["summary"]
+        for f in ["days_since_registration","total_queries","total_paid"]:
+            assert f in summary
+
+    def test_nonexistent_user_404(self):
+        assert client.get("/admin/user-journey/99999999").status_code == 404
+
+    def test_invalid_id_400(self):
+        assert client.get("/admin/user-journey/0").status_code in (400, 422)
+
+
+# ══════════════════════════════════════════════
+# 16. FINANCIAL DASHBOARD
+# ══════════════════════════════════════════════
+class TestFinancialDashboard:
+    def test_200(self):
+        assert client.get("/admin/financial-dashboard").status_code == 200
+
+    def test_required_fields(self):
+        data = client.get("/admin/financial-dashboard").json()
+        for f in ["mrr","arr","total_revenue_ever","revenue_by_plan","revenue_trend_30d",
+                  "top_revenue_users","payment_success_rate","avg_days_to_convert"]:
+            assert f in data
+
+    def test_arr_equals_mrr_times_12(self):
+        data = client.get("/admin/financial-dashboard").json()
+        assert abs(data["arr"] - data["mrr"] * 12) < 0.1
+
+    def test_trend_30d_length(self):
+        assert len(client.get("/admin/financial-dashboard").json()["revenue_trend_30d"]) == 30
+
+    def test_revenue_non_negative(self):
+        data = client.get("/admin/financial-dashboard").json()
+        assert data["total_revenue_ever"] >= 0
+        assert data["mrr"] >= 0
+
+    def test_success_rate_0_to_100(self):
+        rate = client.get("/admin/financial-dashboard").json()["payment_success_rate"]
+        assert 0 <= rate <= 100
+
+
+# ══════════════════════════════════════════════
+# 17. CHURN ANALYSIS
+# ══════════════════════════════════════════════
+class TestChurnAnalysis:
+    def test_200(self):
+        assert client.get("/admin/churn-analysis").status_code == 200
+
+    def test_required_fields(self):
+        data = client.get("/admin/churn-analysis").json()
+        for f in ["current_month_churn","churn_rate_pct","churned_users","at_risk_users","avg_subscription_length_days"]:
+            assert f in data
+
+    def test_churn_rate_0_to_100(self):
+        assert 0 <= client.get("/admin/churn-analysis").json()["churn_rate_pct"] <= 100
+
+    def test_lists(self):
+        data = client.get("/admin/churn-analysis").json()
+        assert isinstance(data["churned_users"], list)
+        assert isinstance(data["at_risk_users"], list)
+
+
+# ══════════════════════════════════════════════
+# 18. BOT PERFORMANCE
+# ══════════════════════════════════════════════
+class TestBotPerformance:
+    def test_200(self):
+        assert client.get("/admin/bot-performance").status_code == 200
+
+    def test_required_fields(self):
+        data = client.get("/admin/bot-performance").json()
+        for f in ["avg_response_time_ms","p50_response_ms","p95_response_ms","p99_response_ms",
+                  "total_queries_today","queries_by_hour","model_distribution","rag_hit_rate"]:
+            assert f in data
+
+    def test_queries_by_hour_length(self):
+        assert len(client.get("/admin/bot-performance").json()["queries_by_hour"]) == 24
+
+    def test_rag_hit_rate_0_to_100(self):
+        assert 0 <= client.get("/admin/bot-performance").json()["rag_hit_rate"] <= 100
+
+
+# ══════════════════════════════════════════════
+# 19. POPULAR TOPICS
+# ══════════════════════════════════════════════
+class TestPopularTopics:
+    def test_200(self):
+        assert client.get("/admin/popular-topics").status_code == 200
+
+    def test_has_categories(self):
+        data = client.get("/admin/popular-topics").json()
+        assert "categories" in data
+        assert isinstance(data["categories"], list)
+
+    def test_has_total(self):
+        assert "total_queries_7d" in client.get("/admin/popular-topics").json()
+
+
+# ══════════════════════════════════════════════
+# 20. SYSTEM CONFIG
+# ══════════════════════════════════════════════
+class TestSystemConfig:
+    def test_list_200(self):
+        assert client.get("/admin/config").status_code == 200
+
+    def test_list_returns_list(self):
+        assert isinstance(client.get("/admin/config").json(), list)
+
+    def test_default_keys_present(self):
+        keys = {c["key"] for c in client.get("/admin/config").json()}
+        for k in ["free_monthly_limit","maintenance_mode","welcome_message","max_voice_size_mb"]:
+            assert k in keys
+
+    def test_update_config_value(self):
+        r = client.put("/admin/config/maintenance_mode", json={"value": "true"})
+        assert r.status_code == 200
+        assert r.json()["success"] is True
+        # restore
+        client.put("/admin/config/maintenance_mode", json={"value": "false"})
+
+    def test_update_nonexistent_key_404(self):
+        assert client.put("/admin/config/nonexistent_xyz", json={"value": "x"}).status_code == 404
+
+    def test_public_config_200(self):
+        assert client.get("/admin/config/public").status_code == 200
+
+    def test_public_config_has_maintenance_mode(self):
+        data = client.get("/admin/config/public").json()
+        assert "maintenance_mode" in data
+
+    def test_update_welcome_message(self):
+        r = client.put("/admin/config/welcome_message", json={"value": "Salam!"})
+        assert r.status_code == 200
+        # verify
+        keys = {c["key"]: c["value"] for c in client.get("/admin/config").json()}
+        assert keys["welcome_message"] == "Salam!"
+
+
+# ══════════════════════════════════════════════
+# 21. EXPORT
+# ══════════════════════════════════════════════
+class TestExport:
+    def test_export_users_200(self):
+        assert client.get("/admin/export/users").status_code == 200
+
+    def test_export_users_content_type(self):
+        r = client.get("/admin/export/users")
+        assert "text/csv" in r.headers.get("content-type", "")
+
+    def test_export_users_has_content_disposition(self):
+        r = client.get("/admin/export/users")
+        assert "attachment" in r.headers.get("content-disposition", "")
+
+    def test_export_users_csv_has_header(self):
+        r = client.get("/admin/export/users")
+        first_line = r.text.split("\n")[0]
+        assert "telegram_id" in first_line
+
+    def test_export_payments_200(self):
+        assert client.get("/admin/export/payments").status_code == 200
+
+    def test_export_payments_csv(self):
+        r = client.get("/admin/export/payments")
+        assert "text/csv" in r.headers.get("content-type", "")
+        assert "plan_name" in r.text.split("\n")[0]
+
+    def test_export_audit_logs_200(self):
+        assert client.get("/admin/export/audit-logs").status_code == 200
+
+    def test_export_audit_logs_csv(self):
+        r = client.get("/admin/export/audit-logs")
+        assert "text/csv" in r.headers.get("content-type", "")
+        assert "action" in r.text.split("\n")[0]
+
+
+# ══════════════════════════════════════════════
+# 22. ADVANCED USER FILTERS
+# ══════════════════════════════════════════════
+class TestAdvancedFilters:
+    def test_200(self):
+        assert client.get("/admin/users/advanced").status_code == 200
+
+    def test_structure(self):
+        data = client.get("/admin/users/advanced").json()
+        for f in ["users","total","page","pages"]:
+            assert f in data
+
+    def test_filter_by_is_active_true(self):
+        data = client.get("/admin/users/advanced?is_active=true").json()
+        for u in data["users"]:
+            assert u["is_active"] is True
+
+    def test_filter_by_min_queries(self):
+        data = client.get("/admin/users/advanced?min_queries=10").json()
+        for u in data["users"]:
+            assert u["queries_used"] >= 10
+
+    def test_filter_by_max_queries(self):
+        data = client.get("/admin/users/advanced?max_queries=5").json()
+        for u in data["users"]:
+            assert u["queries_used"] <= 5
+
+    def test_sort_by_queries_desc(self):
+        data = client.get("/admin/users/advanced?sort_by=queries_used&sort_order=desc&limit=5").json()
+        queries = [u["queries_used"] for u in data["users"]]
+        assert queries == sorted(queries, reverse=True)
+
+    def test_sort_by_queries_asc(self):
+        data = client.get("/admin/users/advanced?sort_by=queries_used&sort_order=asc&limit=5").json()
+        queries = [u["queries_used"] for u in data["users"]]
+        assert queries == sorted(queries)
+
+    def test_invalid_sort_by_ignored(self):
+        r = client.get("/admin/users/advanced?sort_by=invalid_col")
+        assert r.status_code == 200
+
+    def test_filter_by_plan(self):
+        data = client.get("/admin/users/advanced?plan=FREE").json()
+        for u in data["users"]:
+            assert u["plan_name"] == "FREE"
+
+    def test_limit_respected(self):
+        data = client.get("/admin/users/advanced?limit=3").json()
+        assert len(data["users"]) <= 3
