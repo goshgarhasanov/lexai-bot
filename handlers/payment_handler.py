@@ -152,10 +152,12 @@ async def handle_successful_payment(update: Update, context: ContextTypes.DEFAUL
     db = SessionLocal()
     try:
         user = get_or_create_user(db, telegram_id=user_tg_id)
+        from datetime import timedelta
         user.plan_name = plan_name
         user.plan_level = plan_level
         user.queries_used = 0
         user.queries_reset_at = datetime.now(timezone.utc)
+        user.subscription_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
         db.commit()
 
         await update.message.reply_text(
@@ -215,10 +217,13 @@ async def admin_upgrade_user(update: Update, context: ContextTypes.DEFAULT_TYPE)
         db = SessionLocal()
         try:
             user = get_or_create_user(db, telegram_id=target_id)
+            from datetime import timedelta
             user.plan_name = plan_name
             user.plan_level = plan_level
             user.queries_used = 0
             user.queries_reset_at = datetime.now(timezone.utc)
+            if plan_level > 0:
+                user.subscription_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
             db.commit()
 
             await update.message.reply_text(

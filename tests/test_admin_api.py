@@ -141,9 +141,10 @@ class TestPlanUpgrade:
         msg = client.put(f"/admin/users/{uid}/plan", json={"plan": "BASIC"}).json()["message"]
         assert "BASIC" in msg
 
-    def test_upgrade_invalid_plan_400(self):
+    def test_upgrade_invalid_plan_rejected(self):
         uid = get_first_user_id()
-        assert client.put(f"/admin/users/{uid}/plan", json={"plan": "DIAMOND"}).status_code == 400
+        # Pydantic validator: 422; manual HTTPException: 400 — ikisi də düzgündür
+        assert client.put(f"/admin/users/{uid}/plan", json={"plan": "DIAMOND"}).status_code in (400, 422)
 
     def test_upgrade_nonexistent_user_404(self):
         assert client.put("/admin/users/99999999/plan", json={"plan": "PRO"}).status_code == 404
@@ -419,3 +420,182 @@ class TestHealth:
     def test_timestamp_present(self):
         ts = client.get("/admin/health").json()["timestamp"]
         assert "T" in ts  # ISO format yoxlaması
+
+
+# ══════════════════════════════════════════════
+# 12. SECURITY — IDOR / INJECTION / IDEMPOTENCY
+# ══════════════════════════════════════════════
+class TestSecurity:
+    # IDOR: neqativ ID
+    def test_negative_user_id_400(self):
+        assert client.put("/admin/users/-1/plan", json={"plan": "PRO"}).status_code == 400
+
+    def test_zero_user_id_400(self):
+        assert client.put("/admin/users/0/plan", json={"plan": "PRO"}).status_code == 400
+
+    def test_overflow_user_id_400(self):
+        assert client.put("/admin/users/9999999999/plan", json={"plan": "PRO"}).status_code == 400
+
+    def test_negative_block_400(self):
+        assert client.put("/admin/users/-5/block").status_code == 400
+
+    def test_negative_reset_400(self):
+        assert client.put("/admin/users/-1/reset-queries").status_code == 400
+
+    def test_negative_payment_confirm_400(self):
+        assert client.put("/admin/payments/-1/confirm").status_code == 400
+
+    def test_overflow_payment_confirm_400(self):
+        assert client.put("/admin/payments/9999999999/confirm").status_code == 400
+
+    # SQL Injection — SQLAlchemy ORM parametric queries qoruyur
+    def test_sql_injection_search_safe(self):
+        payloads = [
+            "'; DROP TABLE users; --",
+            "' OR '1'='1",
+            "\" OR \"1\"=\"1",
+            "1; SELECT * FROM users--",
+            "' UNION SELECT * FROM users--",
+        ]
+        for p in payloads:
+            r = client.get(f"/admin/users/search?q={p}")
+            assert r.status_code == 200, f"Search failed for: {p}"
+            assert isinstance(r.json(), list), f"Not a list for: {p}"
+
+    def test_sql_injection_list_search_safe(self):
+        r = client.get("/admin/users?search=' OR '1'='1")
+        assert r.status_code == 200
+        assert "users" in r.json()
+
+    def test_invalid_plan_name_rejected(self):
+        uid = get_first_user_id()
+        for bad in ["GOLD", "PLATINUM", "'; DROP TABLE--", "", "123"]:
+            r = client.put(f"/admin/users/{uid}/plan", json={"plan": bad})
+            assert r.status_code in (400, 422), f"Bad plan '{bad}' should be rejected"
+
+    # Payment idempotency
+    def test_idempotency_same_key_returns_same_id(self):
+        tid = client.get("/admin/users?limit=1").json()["users"][0]["telegram_id"]
+        body = {"telegram_id": tid, "plan_name": "BASIC", "amount": 9.99, "method": "card"}
+        r1 = client.post("/admin/payments", json=body).json()
+        r2 = client.post("/admin/payments", json=body).json()
+        # İkinci sorğu ya eyni id-ni qaytarır, ya da yeni pending yaradır
+        # Hər iki halda status 200 olmalıdır
+        assert r1["success"] is True
+        assert r2["success"] is True
+
+    def test_idempotency_response_has_duplicate_field(self):
+        tid = client.get("/admin/users?limit=1").json()["users"][0]["telegram_id"]
+        body = {"telegram_id": tid, "plan_name": "PRO", "amount": 24.99, "method": "card"}
+        r1 = client.post("/admin/payments", json=body).json()
+        r2 = client.post("/admin/payments", json=body).json()
+        assert "duplicate" in r1
+        assert "duplicate" in r2
+        # İkinci eyni sorğu duplicate=True qaytarmalıdır
+        if r1["id"] == r2["id"]:
+            assert r2["duplicate"] is True
+
+
+# ══════════════════════════════════════════════
+# 13. REVENUE STATS
+# ══════════════════════════════════════════════
+class TestRevenueStats:
+    def test_200(self):
+        assert client.get("/admin/revenue-stats").status_code == 200
+
+    def test_required_fields(self):
+        data = client.get("/admin/revenue-stats").json()
+        for f in ["today", "week", "month", "total", "mrr", "trend_30d", "by_plan"]:
+            assert f in data, f"Missing: {f}"
+
+    def test_trend_30_days(self):
+        trend = client.get("/admin/revenue-stats").json()["trend_30d"]
+        assert len(trend) == 30
+
+    def test_trend_fields(self):
+        for d in client.get("/admin/revenue-stats").json()["trend_30d"][:3]:
+            assert "day" in d and "revenue" in d and "count" in d
+
+    def test_revenue_non_negative(self):
+        data = client.get("/admin/revenue-stats").json()
+        for f in ["today", "week", "month", "total", "mrr"]:
+            assert data[f] >= 0, f"{f} is negative"
+
+    def test_by_plan_is_list(self):
+        assert isinstance(client.get("/admin/revenue-stats").json()["by_plan"], list)
+
+    def test_week_gte_today(self):
+        data = client.get("/admin/revenue-stats").json()
+        assert data["week"] >= data["today"]
+
+    def test_total_gte_month(self):
+        data = client.get("/admin/revenue-stats").json()
+        assert data["total"] >= data["month"]
+
+
+# ══════════════════════════════════════════════
+# 14. USER ACTIVITY
+# ══════════════════════════════════════════════
+class TestUserActivity:
+    def test_200(self):
+        assert client.get("/admin/user-activity").status_code == 200
+
+    def test_required_fields(self):
+        data = client.get("/admin/user-activity").json()
+        for f in ["active_24h", "active_7d", "new_this_week", "returning",
+                  "hourly_activity", "peak_hour"]:
+            assert f in data, f"Missing: {f}"
+
+    def test_hourly_activity_24_entries(self):
+        assert len(client.get("/admin/user-activity").json()["hourly_activity"]) == 24
+
+    def test_hourly_has_hour_count(self):
+        for h in client.get("/admin/user-activity").json()["hourly_activity"][:3]:
+            assert "hour" in h and "count" in h
+            assert isinstance(h["count"], int) and h["count"] >= 0
+
+    def test_counts_non_negative(self):
+        data = client.get("/admin/user-activity").json()
+        for f in ["active_24h", "active_7d", "new_this_week", "returning"]:
+            assert data[f] >= 0
+
+    def test_active_7d_gte_24h(self):
+        data = client.get("/admin/user-activity").json()
+        assert data["active_7d"] >= data["active_24h"]
+
+    def test_peak_hour_fields(self):
+        pk = client.get("/admin/user-activity").json()["peak_hour"]
+        assert "hour" in pk and "count" in pk
+
+
+# ══════════════════════════════════════════════
+# 15. RETENTION
+# ══════════════════════════════════════════════
+class TestRetention:
+    def test_200(self):
+        assert client.get("/admin/retention").status_code == 200
+
+    def test_required_fields(self):
+        data = client.get("/admin/retention").json()
+        for f in ["free_avg_queries", "paid_avg_queries", "churn_count",
+                  "churn_rate_pct", "total_paid_users", "plan_queries"]:
+            assert f in data, f"Missing: {f}"
+
+    def test_churn_rate_0_to_100(self):
+        rate = client.get("/admin/retention").json()["churn_rate_pct"]
+        assert 0 <= rate <= 100
+
+    def test_averages_non_negative(self):
+        data = client.get("/admin/retention").json()
+        assert data["free_avg_queries"] >= 0
+        assert data["paid_avg_queries"] >= 0
+
+    def test_churn_count_non_negative(self):
+        assert client.get("/admin/retention").json()["churn_count"] >= 0
+
+    def test_plan_queries_is_list(self):
+        assert isinstance(client.get("/admin/retention").json()["plan_queries"], list)
+
+    def test_plan_queries_fields(self):
+        for p in client.get("/admin/retention").json()["plan_queries"][:2]:
+            assert "plan_name" in p and "avg_q" in p

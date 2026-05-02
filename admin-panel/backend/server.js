@@ -45,7 +45,7 @@ const auth = (req, res, next) => {
   const h = req.headers.authorization;
   if (!h?.startsWith("Bearer ")) return res.status(401).json({ error: "Token yoxdur" });
   try {
-    req.admin = jwt.verify(h.slice(7), process.env.JWT_SECRET);
+    req.admin = jwt.verify(h.slice(7), process.env.JWT_SECRET, { algorithms: ["HS256"] });
     next();
   } catch (e) {
     const msg = e.name === "TokenExpiredError" ? "Token müddəti bitib" : "Token etibarsızdır";
@@ -152,6 +152,12 @@ app.get("/api/bot-stats",          auth, apiLimiter, (req, res) => pyProxy(req, 
 app.get("/api/payment-stats",      auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/payment-stats"));
 app.get("/api/users/search",       auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/users/search"));
 app.get("/api/health-check",       auth,             (req, res) => pyProxy(req, res, "/admin/health"));
+
+// New stats endpoints
+app.get("/api/query-stats",    auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/query-stats"));
+app.get("/api/revenue-stats",  auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/revenue-stats"));
+app.get("/api/user-activity",  auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/user-activity"));
+app.get("/api/retention",      auth, apiLimiter, (req, res) => pyProxy(req, res, "/admin/retention"));
 
 // Ban idarəetməsi (yalnız admin)
 app.get("/api/admin/banned",       auth, (_, res) => res.json(getBannedList()));

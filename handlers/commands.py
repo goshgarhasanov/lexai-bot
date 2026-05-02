@@ -111,6 +111,18 @@ async def cmd_mystats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         plan_icons = {0: "🆓", 1: "📘", 2: "⭐", 3: "🏛"}
         icon = plan_icons.get(user.plan_level, "🆓")
 
+        total_all = getattr(user, "total_queries_all_time", None) or 0
+        exp = getattr(user, "subscription_expires_at", None)
+        if exp:
+            from datetime import timezone as _tz
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=_tz.utc)
+            exp_str = exp.strftime("%d.%m.%Y")
+        else:
+            exp_str = "—"
+        last_act = getattr(user, "last_active", None)
+        last_act_str = last_act.strftime("%d.%m.%Y %H:%M") if last_act else "—"
+
         await update.message.reply_text(
             f"📊 *Hesabınız*\n"
             f"━━━━━━━━━━━━━━━\n"
@@ -118,6 +130,9 @@ async def cmd_mystats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             f"{icon} Plan: *{user.plan_name}*\n"
             f"📨 Bu ay: {user.queries_used} / {limit_display} sorğu\n"
             f"✅ Qalan: {remaining} sorğu\n"
+            f"📈 Ümumi sorğu: {total_all}\n"
+            f"🕐 Son aktiv: {last_act_str}\n"
+            f"📅 Abunəlik bitmə: {exp_str}\n"
             f"🌐 Dil: {(user.language or 'az').upper()}\n"
             f"📅 Qeydiyyat: {user.created_at.strftime('%d.%m.%Y') if user.created_at else '—'}\n"
             f"━━━━━━━━━━━━━━━\n"

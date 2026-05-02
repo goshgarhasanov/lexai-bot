@@ -24,6 +24,8 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
     last_active = Column(DateTime, nullable=True)
+    subscription_expires_at = Column(DateTime, nullable=True)
+    total_queries_all_time = Column(Integer, default=0)
 
     def is_limit_reached(self) -> bool:
         from config import config
