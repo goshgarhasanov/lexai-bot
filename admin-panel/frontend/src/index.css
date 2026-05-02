@@ -2,6 +2,145 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-950 text-gray-100 font-sans;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-gray-950 text-gray-100 font-sans antialiased;
+    font-feature-settings: "cv02","cv03","cv04","cv11";
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-font-smoothing: antialiased;
+  }
+  *:focus {
+    outline: none;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-blue-500/60 ring-offset-2 ring-offset-gray-950 rounded;
+  }
+  ::selection {
+    @apply bg-blue-500/30 text-white;
+  }
+  /* Scrollbar */
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: rgb(55 65 81);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background 200ms ease;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: rgb(75 85 99); background-clip: padding-box; border: 2px solid transparent; }
+  * { scrollbar-width: thin; scrollbar-color: rgb(55 65 81) transparent; }
+
+  button, [role="button"], a, input, select, textarea {
+    transition-property: color, background-color, border-color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Inputs/selects fokus animasyonu */
+  input, select, textarea {
+    transition-property: all;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  input:focus, select:focus, textarea:focus {
+    @apply ring-2 ring-blue-500/40 border-blue-500/60;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-gray-900 border border-gray-800 rounded-2xl transition-all duration-300;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card-hover {
+    @apply hover:border-gray-700 hover:shadow-lift hover:-translate-y-0.5;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all duration-200
+           active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none select-none;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-primary  { @apply btn bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/30 hover:shadow-glow-blue px-4 py-2; }
+  .btn-secondary{ @apply btn bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 hover:border-gray-600 px-4 py-2; }
+  .btn-danger   { @apply btn bg-red-700 hover:bg-red-600 text-white shadow-md shadow-red-900/30 px-4 py-2; }
+  .btn-ghost    { @apply btn text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-1.5; }
+
+  .input {
+    @apply bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500
+           transition-all duration-200 focus:outline-none focus:border-blue-500 focus:bg-gray-800/80;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Skeleton */
+  .skeleton {
+    background-image: linear-gradient(90deg, rgb(55 65 81) 0%, rgb(75 85 99) 50%, rgb(55 65 81) 100%);
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded;
+  }
+
+  /* Stagger helpers */
+  .stagger > * { animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .stagger > *:nth-child(1) { animation-delay: 40ms; }
+  .stagger > *:nth-child(2) { animation-delay: 80ms; }
+  .stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger > *:nth-child(4) { animation-delay: 160ms; }
+  .stagger > *:nth-child(5) { animation-delay: 200ms; }
+  .stagger > *:nth-child(6) { animation-delay: 240ms; }
+  .stagger > *:nth-child(7) { animation-delay: 280ms; }
+  .stagger > *:nth-child(8) { animation-delay: 320ms; }
+  .stagger > *:nth-child(9) { animation-delay: 360ms; }
+  .stagger > *:nth-child(10){ animation-delay: 400ms; }
+
+  .stagger-fast > * { animation: fade-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .stagger-fast > *:nth-child(1) { animation-delay: 20ms; }
+  .stagger-fast > *:nth-child(2) { animation-delay: 50ms; }
+  .stagger-fast > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger-fast > *:nth-child(4) { animation-delay: 110ms; }
+  .stagger-fast > *:nth-child(5) { animation-delay: 140ms; }
+  .stagger-fast > *:nth-child(6) { animation-delay: 170ms; }
+  .stagger-fast > *:nth-child(7) { animation-delay: 200ms; }
+  .stagger-fast > *:nth-child(8) { animation-delay: 230ms; }
+
+  /* Page wrapper */
+  .page-enter {
+    animation: fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(17, 24, 39, 0.72);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+  }
+  .glass-strong {
+    background: rgba(17, 24, 39, 0.88);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+
+  /* Hover-only on devices that can hover (avoid stuck states on mobile) */
+  @media (hover: none) {
+    .card-hover:hover { transform: none; box-shadow: none; }
+  }
+
+  /* Reduced motion respect */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

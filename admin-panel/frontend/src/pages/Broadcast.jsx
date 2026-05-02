@@ -103,14 +103,16 @@ export default function Broadcast() {
              onConfirm={modal?.onConfirm} onCancel={() => setModal(null)} />
 
       <div>
-        <h2 className="text-2xl font-bold text-white">📣 Broadcast</h2>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <span>📣</span><span>Broadcast</span>
+        </h2>
         <p className="text-gray-500 text-sm mt-1">İstifadəçilərə kütləvi mesaj göndər</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Create form */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h3 className="text-base font-semibold text-white mb-5">✍️ Yeni Broadcast</h3>
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
+          <h3 className="text-sm sm:text-base font-semibold text-white mb-5 flex items-center gap-2">✍️ Yeni Broadcast</h3>
           <form onSubmit={createBroadcast} className="space-y-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1.5">Başlıq</label>
@@ -172,7 +174,7 @@ export default function Broadcast() {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold py-3 rounded-xl transition-all duration-200 ease-emph active:scale-[0.98] shadow-lg shadow-blue-900/40 hover:shadow-glow-blue"
             >
               📣 Broadcast Yarat
             </button>
@@ -180,25 +182,31 @@ export default function Broadcast() {
         </div>
 
         {/* Broadcast list */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-base font-semibold text-white">📋 Broadcast Siyahısı</h3>
-            <button onClick={loadBroadcasts} className="text-gray-400 hover:text-white text-sm transition">↺</button>
+            <h3 className="text-sm sm:text-base font-semibold text-white flex items-center gap-2">📋 Broadcast Siyahısı</h3>
+            <button
+              onClick={loadBroadcasts}
+              className="text-gray-400 hover:text-white text-sm p-2 rounded-lg hover:bg-gray-800 transition-all active:scale-90"
+              aria-label="Yenilə"
+            >
+              <span className={loading ? "animate-spin-slow inline-block" : "inline-block"}>↺</span>
+            </button>
           </div>
 
-          {loading ? (
-            <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-gray-700 animate-pulse rounded-xl" />)}</div>
+          {loading && broadcasts.length === 0 ? (
+            <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 skeleton rounded-xl" />)}</div>
           ) : broadcasts.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-4xl mb-3">📭</div>
-              <p className="text-gray-500">Hələ broadcast yoxdur</p>
+              <div className="text-5xl mb-3 opacity-60">📭</div>
+              <p className="text-gray-500 text-sm">Hələ broadcast yoxdur</p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1 stagger-fast">
               {broadcasts.map(bc => {
                 const style = STATUS_STYLE[bc.status] || STATUS_STYLE.DRAFT;
                 return (
-                  <div key={bc.id} className="bg-gray-800 rounded-xl p-4">
+                  <div key={bc.id} className="bg-gray-800/70 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 rounded-xl p-4 transition-all duration-300 ease-smooth">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="text-white text-sm font-medium truncate">{bc.title || "Başlıqsız"}</div>

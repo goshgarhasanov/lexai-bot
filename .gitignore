@@ -5,3 +5,8 @@ __pycache__/
 uploads/
 bot.log
 bot_err.log
+admin_api.log
+node_modules/
+admin-panel/**/*.log
+admin-panel/**/.vite/
+nohup.out

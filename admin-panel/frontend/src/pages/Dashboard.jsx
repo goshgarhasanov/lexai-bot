@@ -11,26 +11,26 @@ const PLAN_COLORS = {
 
 function KPI({ icon, label, value, sub, trend, color = "bg-gray-900 border-gray-800" }) {
   return (
-    <div className={`border rounded-2xl p-5 ${color}`}>
-      <div className="flex items-center justify-between mb-3">
+    <div className={`border rounded-2xl p-4 sm:p-5 transition-all duration-300 ease-smooth hover:-translate-y-0.5 hover:border-gray-700 hover:shadow-lift ${color}`}>
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
         <span className="text-xl">{icon}</span>
         {trend && (
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            trend > 0 ? "bg-green-900 text-green-400" : "bg-red-900 text-red-400"
+          <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+            trend > 0 ? "bg-green-900/60 text-green-300 ring-1 ring-green-700/40" : "bg-red-900/60 text-red-300 ring-1 ring-red-700/40"
           }`}>
             {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}%
           </span>
         )}
       </div>
-      <div className="text-3xl font-bold text-white truncate">{value ?? <Skeleton />}</div>
+      <div className="text-2xl sm:text-3xl font-bold text-white truncate tabular-nums">{value ?? <Skeleton />}</div>
       <div className="text-gray-400 text-xs mt-1">{label}</div>
-      {sub && <div className="text-gray-500 text-xs mt-0.5">{sub}</div>}
+      {sub && <div className="text-gray-500 text-[11px] mt-0.5">{sub}</div>}
     </div>
   );
 }
 
 function Skeleton({ w = "w-20", h = "h-8" }) {
-  return <div className={`${w} ${h} bg-gray-700 rounded animate-pulse inline-block`} />;
+  return <div className={`${w} ${h} skeleton rounded inline-block`} />;
 }
 
 function MiniBar({ value, max, color = "bg-blue-500", label, tooltip }) {
@@ -125,7 +125,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Row 1 */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-fast">
         <KPI icon="👥" label="Ümumi istifadəçi"    value={stats?.totalUsers}   trend={7}  sub="qeydiyyat" />
         <KPI icon="💰" label="MRR"                  value={mrr > 0 ? `$${mrr.toFixed(0)}` : "$0"} sub="aylıq gəlir" />
         <KPI icon="🟢" label="Bu gün aktiv"         value={activity?.active_24h ?? stats?.activeToday} />
@@ -133,16 +133,16 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Row 2 */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPI icon="💳" label="Ödənişli istifadəçi"  value={stats?.paidUsers}    sub="FREE olmayan" />
         <KPI icon="📨" label="Ümumi sorğu"           value={stats?.totalQueries} sub="bütün vaxt" />
         <KPI icon="📈" label="Bu həftə yeni"         value={activity?.new_this_week} />
         <KPI icon="⚠️" label="Risk altında"          value={activity?.at_risk_count} color={activity?.at_risk_count > 0 ? "bg-red-950 border-red-900" : "bg-gray-900 border-gray-800"} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Revenue mini chart */}
-        <div className="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-base font-semibold text-white">💵 Son 7 Günlük Gəlir</h3>
             <Link to="/revenue-analytics" className="text-blue-400 hover:text-blue-300 text-xs transition">Ətraflı →</Link>
@@ -171,8 +171,8 @@ export default function Dashboard() {
         </div>
 
         {/* Plan distribution */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h3 className="text-base font-semibold text-white mb-5">📋 Plan Bölgüsü</h3>
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
+          <h3 className="text-sm sm:text-base font-semibold text-white mb-5">📋 Plan Bölgüsü</h3>
           <div className="space-y-3">
             {["FREE", "BASIC", "PRO", "FIRM"].map(plan => {
               const count = stats?.plans?.[plan] ?? 0;
@@ -193,10 +193,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Quick actions */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h3 className="text-base font-semibold text-white mb-4">⚡ Tez Keçidlər</h3>
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
+          <h3 className="text-sm sm:text-base font-semibold text-white mb-4">⚡ Tez Keçidlər</h3>
           <div className="space-y-2">
             {[
               { to: "/payments",      icon: "💳", label: "Gözləyən ödənişlər",        badge: pending > 0 ? pending : null, color: "hover:bg-yellow-900/30" },
@@ -205,21 +205,25 @@ export default function Dashboard() {
               { to: "/revenue-analytics", icon: "💰", label: "Gəlir analitikası",      color: "hover:bg-green-900/30" },
               { to: "/bot-performance",   icon: "🤖", label: "Bot performansı",         color: "hover:bg-purple-900/30" },
             ].map(({ to, icon, label, badge, color }) => (
-              <Link key={to} to={to} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-300 hover:text-white transition-all ${color}`}>
-                <span>{icon}</span>
-                <span className="flex-1">{label}</span>
-                {badge != null && <span className="bg-yellow-500 text-yellow-950 text-xs font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
-                <span className="text-gray-600">→</span>
+              <Link
+                key={to}
+                to={to}
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-300 hover:text-white transition-all duration-250 ease-smooth hover:translate-x-0.5 ${color}`}
+              >
+                <span className="transition-transform duration-300 ease-spring group-hover:scale-110">{icon}</span>
+                <span className="flex-1 truncate">{label}</span>
+                {badge != null && <span className="bg-yellow-400 text-yellow-950 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse-soft">{badge}</span>}
+                <span className="text-gray-600 transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
             ))}
           </div>
         </div>
 
         {/* Recent audit logs */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-white">📋 Son Əməliyyatlar</h3>
-            <Link to="/audit-logs" className="text-blue-400 hover:text-blue-300 text-xs transition">Hamısı →</Link>
+            <h3 className="text-sm sm:text-base font-semibold text-white">📋 Son Əməliyyatlar</h3>
+            <Link to="/audit-logs" className="text-blue-400 hover:text-blue-300 text-xs transition-colors">Hamısı →</Link>
           </div>
           {loading ? (
             <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-8 bg-gray-700 rounded animate-pulse" />)}</div>
