@@ -163,9 +163,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 None, lambda: call_ai(system_prompt, messages, route)
             )
         except Exception as e:
-            logger.error(f"AI error: {e}")
+            logger.error(f"AI error: {e}", exc_info=True)
             stop_event.set()
-            await thinking_msg.delete()
+            try:
+                await thinking_msg.delete()
+            except Exception:
+                pass
             await update.message.reply_text(
                 get_error_message("ai_timeout"),
                 reply_markup=main_menu_keyboard(),
@@ -219,7 +222,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await update.message.reply_text(chunk, parse_mode="Markdown", reply_markup=markup)
 
     except Exception as e:
-        logger.error(f"Handler error: {e}")
+        logger.error(f"Handler error: {e}", exc_info=True)
         stop_event.set()
         if thinking_msg:
             try:

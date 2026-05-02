@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
 
-function KPI({ label, value, sub, color = "" }) {
+function KPI({ icon, label, value, sub, color = "from-gray-900 to-gray-900" }) {
   return (
-    <div className={`bg-gray-900 border border-gray-800 rounded-2xl p-5 ${color}`}>
-      <div className="text-3xl font-bold text-white truncate">{value ?? <div className="h-8 w-20 bg-gray-700 rounded animate-pulse" />}</div>
-      <div className="text-gray-400 text-sm mt-1">{label}</div>
-      {sub && <div className="text-gray-500 text-xs mt-0.5">{sub}</div>}
+    <div className={`bg-gradient-to-br ${color} border border-gray-800 rounded-2xl p-4 sm:p-5 transition-all duration-300 ease-smooth hover:-translate-y-0.5 hover:border-gray-700 hover:shadow-lift`}>
+      {icon && <div className="text-xl mb-1.5">{icon}</div>}
+      <div className="text-2xl sm:text-3xl font-bold text-white truncate tabular-nums">{value ?? <div className="h-8 w-20 skeleton rounded inline-block" />}</div>
+      <div className="text-gray-400 text-xs sm:text-sm mt-1">{label}</div>
+      {sub && <div className="text-gray-500 text-[11px] mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -33,21 +34,23 @@ export default function RevenueAnalytics() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">💰 Gəlir Analitikası</h2>
+      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <span>💰</span><span>Gəlir Analitikası</span>
+      </h2>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <KPI label="MRR" value={fin?.mrr != null ? `$${fin.mrr.toFixed(2)}` : null} sub="Aylıq daimi gəlir" />
-        <KPI label="ARR" value={fin?.arr != null ? `$${fin.arr.toFixed(2)}` : null} sub="İllik proyeksiya" />
-        <KPI label="Ümumi Gəlir" value={fin?.total_revenue != null ? `$${fin.total_revenue.toFixed(2)}` : null} />
-        <KPI label="ARPU" value={fin?.arpu != null ? `$${fin.arpu.toFixed(2)}` : null} sub="Orta istifadəçi başına" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-fast">
+        <KPI icon="💸" label="MRR"          value={fin?.mrr != null ? `$${fin.mrr.toFixed(0)}` : null} sub="Aylıq daimi gəlir" color="from-blue-950/50 to-gray-900" />
+        <KPI icon="📈" label="ARR"          value={fin?.arr != null ? `$${fin.arr.toFixed(0)}` : null} sub="İllik proyeksiya" color="from-green-950/40 to-gray-900" />
+        <KPI icon="💰" label="Ümumi Gəlir"  value={fin?.total_revenue != null ? `$${fin.total_revenue.toFixed(0)}` : null} sub="Bütün vaxt" color="from-yellow-950/40 to-gray-900" />
+        <KPI icon="👤" label="ARPU"         value={fin?.arpu != null ? `$${fin.arpu.toFixed(2)}` : null} sub="İstifadəçi başına" color="from-purple-950/40 to-gray-900" />
       </div>
 
       {/* Revenue trend bar chart */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-base font-semibold text-white mb-5">📅 Son 30 Günlük Gəlir Trendi</h3>
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
+        <h3 className="text-sm sm:text-base font-semibold text-white mb-4 sm:mb-5 flex items-center gap-2">📅 Son 30 Günlük Gəlir Trendi</h3>
         {loading ? (
-          <div className="flex items-end gap-0.5 h-32">{[...Array(30)].map((_, i) => <div key={i} className="flex-1 bg-gray-700 animate-pulse rounded-t" style={{ height: `${15 + Math.random() * 70}px` }} />)}</div>
+          <div className="flex items-end gap-0.5 h-32">{[...Array(30)].map((_, i) => <div key={i} className="flex-1 skeleton rounded-t" style={{ height: `${15 + Math.random() * 70}px` }} />)}</div>
         ) : daily30.length === 0 ? (
           <p className="text-gray-500 text-sm text-center py-8">📭 Məlumat yoxdur</p>
         ) : (
@@ -57,10 +60,15 @@ export default function RevenueAnalytics() {
               return (
                 <div key={i} className="flex-1 flex flex-col items-center group">
                   <div
-                    className="w-full rounded-t transition-all duration-300 cursor-pointer relative"
-                    style={{ height: `${h}px`, background: d.revenue > 0 ? "#3b82f6" : "#374151" }}
+                    className="w-full rounded-t transition-all duration-500 ease-smooth cursor-pointer relative hover:opacity-90"
+                    style={{
+                      height: `${h}px`,
+                      background: d.revenue > 0 ? "linear-gradient(to top, #2563eb, #60a5fa)" : "#374151",
+                      animationDelay: `${i * 15}ms`,
+                      animation: "fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+                    }}
                   >
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-gray-700 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 pointer-events-none">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-gray-700 text-white text-[11px] px-2 py-1 rounded whitespace-nowrap z-10 pointer-events-none shadow-lg">
                       {d.date?.slice(5)}: ${(d.revenue || 0).toFixed(2)}
                     </div>
                   </div>
@@ -75,9 +83,9 @@ export default function RevenueAnalytics() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Plan breakdown */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
           <h3 className="text-base font-semibold text-white mb-5">📊 Plana Görə Bölgü</h3>
           {loading ? <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-8 bg-gray-700 rounded animate-pulse" />)}</div> : (
             <div className="overflow-x-auto">
@@ -122,7 +130,7 @@ export default function RevenueAnalytics() {
         </div>
 
         {/* Churn */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-gray-700">
           <h3 className="text-base font-semibold text-white mb-5">📉 Churn Analizi</h3>
           {loading ? <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-10 bg-gray-700 rounded animate-pulse" />)}</div> : (
             <div className="space-y-4">
