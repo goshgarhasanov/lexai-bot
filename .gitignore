@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 *.db
 uploads/
+bot.log
+bot_err.log
