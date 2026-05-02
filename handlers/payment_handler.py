@@ -151,6 +151,17 @@ async def handle_successful_payment(update: Update, context: ContextTypes.DEFAUL
     user_tg_id = update.effective_user.id
     db = SessionLocal()
     try:
+        # Idempotency: prevent duplicate Stars payment processing
+        from sqlalchemy import text as _text
+        charge_id = getattr(payment, "telegram_payment_charge_id", None) or payload
+        existing = db.execute(
+            _text("SELECT id FROM payments WHERE idempotency_key = :key"),
+            {"key": charge_id},
+        ).fetchone()
+        if existing:
+            logger.warning(f"Duplicate Stars payment ignored: charge_id={charge_id}")
+            return
+
         user = get_or_create_user(db, telegram_id=user_tg_id)
         from datetime import timedelta
         user.plan_name = plan_name
@@ -158,6 +169,16 @@ async def handle_successful_payment(update: Update, context: ContextTypes.DEFAUL
         user.queries_used = 0
         user.queries_reset_at = datetime.now(timezone.utc)
         user.subscription_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+
+        # Record the payment with idempotency key
+        db.execute(
+            _text(
+                "INSERT INTO payments (telegram_id, plan_name, amount, method, status, "
+                "confirmed_by, idempotency_key) VALUES (:tid, :plan, 0, 'stars', 'confirmed', "
+                "'telegram', :key)"
+            ),
+            {"tid": user_tg_id, "plan": plan_name, "key": charge_id},
+        )
         db.commit()
 
         await update.message.reply_text(

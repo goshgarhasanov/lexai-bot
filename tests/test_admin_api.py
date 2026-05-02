@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from fastapi.testclient import TestClient
 import admin_api
 
-client = TestClient(admin_api.app)
+client = TestClient(admin_api.app, headers={"X-Admin-Key": "huquqai-internal-key-2026"})
 
 
 # ══════════════════════════════════════════════

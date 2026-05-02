@@ -51,6 +51,27 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if not voice:
         return
 
+    # File size limit: 10 MB
+    MAX_VOICE_BYTES = 10 * 1024 * 1024
+    file_size = getattr(voice, "file_size", None)
+    if file_size and file_size > MAX_VOICE_BYTES:
+        await update.message.reply_text(
+            "⚠️ Ses faylı çox böyükdür. Maksimum 10 MB icazə verilir.",
+            reply_markup=main_menu_keyboard(),
+        )
+        return
+
+    # Allowed mime types
+    ALLOWED_MIME = {"audio/ogg", "audio/mpeg", "audio/mp4", "audio/webm",
+                    "audio/wav", "audio/x-wav", "video/mp4"}
+    mime = getattr(voice, "mime_type", None)
+    if mime and mime not in ALLOWED_MIME:
+        await update.message.reply_text(
+            "⚠️ Dəstəklənməyən audio formatı. OGG, MP3 və ya MP4 göndərin.",
+            reply_markup=main_menu_keyboard(),
+        )
+        return
+
     db = SessionLocal()
     stop = asyncio.Event()
     thinking_msg = None

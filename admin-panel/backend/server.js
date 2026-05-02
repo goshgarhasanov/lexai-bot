@@ -63,10 +63,11 @@ const pyProxy = async (req, res, pyPath) => {
       data:   req.body,
       timeout: 10000,
       validateStatus: null,
+      headers: { "X-Admin-Key": process.env.ADMIN_API_KEY || "huquqai-internal-key-2026" },
     });
     res.status(resp.status).json(resp.data);
   } catch (e) {
-    res.status(502).json({ error: "Python API ilə əlaqə yoxdur", detail: e.message });
+    res.status(502).json({ error: "Python API ilə əlaqə yoxdur" });
   }
 };
 
@@ -126,6 +127,31 @@ app.post(
     res.json({ token, username, expires_in: 28800 });
   }
 );
+
+// Refresh token — GET with Bearer
+app.post("/api/auth/refresh", strictLimiter, (req, res) => {
+  const h = req.headers.authorization;
+  if (!h?.startsWith("Bearer ")) return res.status(401).json({ error: "Token yoxdur" });
+  try {
+    const old = jwt.verify(h.slice(7), process.env.JWT_SECRET, {
+      algorithms: ["HS256"],
+      ignoreExpiration: true, // expired token-i də refresh etməyə icazə ver
+    });
+    // Only refresh if expired within last 24h
+    const now = Math.floor(Date.now() / 1000);
+    if (old.exp && now - old.exp > 86400) {
+      return res.status(401).json({ error: "Token çox köhnədir, yenidən daxil olun" });
+    }
+    const token = jwt.sign(
+      { username: old.username, role: "admin" },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h", algorithms: "HS256", issuer: "huquqai-admin" }
+    );
+    res.json({ token, expires_in: 28800 });
+  } catch {
+    res.status(401).json({ error: "Token etibarsızdır" });
+  }
+});
 
 // ════════════════════════════════════════════════════
 // PROTECTED ROUTES (JWT + rate limit)

@@ -8,13 +8,24 @@ import json
 import time
 import hashlib
 from datetime import datetime, timezone, timedelta
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, Security, Depends
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, ConfigDict
 from typing import Optional
 
 from database.models import SessionLocal, User, Base, engine
 from sqlalchemy import text
+
+# ─── API Key auth (protects direct port 8000 access) ──
+_API_KEY_NAME = "X-Admin-Key"
+_api_key_header = APIKeyHeader(name=_API_KEY_NAME, auto_error=False)
+_ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "huquqai-internal-key-2026")
+
+
+async def require_api_key(key: str = Security(_api_key_header)):
+    if key != _ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing X-Admin-Key")
 
 _start_time = time.time()
 
@@ -78,7 +89,11 @@ def _validate_payment_id(payment_id: int) -> None:
         raise HTTPException(400, f"Yanlış ödəniş ID: {payment_id}")
 
 
-app = FastAPI(title="HuquqAI Admin API", docs_url="/admin/docs")
+app = FastAPI(
+    title="HuquqAI Admin API",
+    docs_url="/admin/docs",
+    dependencies=[Depends(require_api_key)],
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -156,6 +171,7 @@ def list_users(page: int = 1, limit: int = 20, search: str = "", plan: str = "")
 
 
 class PlanUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     plan: str
 
     @validator("plan")
@@ -251,6 +267,7 @@ def list_payments(status: str = ""):
 
 
 class PaymentCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     telegram_id: int
     plan_name: str
     amount: float = 0
