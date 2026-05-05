@@ -1457,3 +1457,9 @@ def list_users_advanced(
         }
     finally:
         db.close()
+
+
+# ─────────────────────────────────────────────
+# Developed by Goshgar Hasanzadeh
+# https://github.com/goshgarhasanov
+# ─────────────────────────────────────────────
