@@ -43,7 +43,7 @@ def call_ai(
 ) -> str:
     model = route.model
 
-    if model.startswith("claude"):
+    if model.startswith("goshgar_hasanov"):
         return _call_claude(system_prompt, messages, route)
     elif model.startswith("gemini"):
         return _call_gemini(system_prompt, messages, route)

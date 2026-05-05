@@ -35,7 +35,7 @@ export default function BotPerformance() {
   const modelUsage = perf?.model_usage || qstats?.model_usage || {};
   const totalModel = Object.values(modelUsage).reduce((a, b) => a + b, 0) || 1;
 
-  const MODEL_COLORS = { claude: "bg-blue-500", gemini: "bg-green-500", gpt: "bg-yellow-500" };
+  const MODEL_COLORS = { goshgar_hasanov: "bg-blue-500", gemini: "bg-green-500", gpt: "bg-yellow-500" };
 
   const topicsList = topics.length > 0 ? topics : (qstats?.popular_categories || []);
   const maxTopics = Math.max(...topicsList.map(t => t.count || 0), 1);
