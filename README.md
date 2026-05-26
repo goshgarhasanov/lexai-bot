@@ -61,3 +61,11 @@ python main.py
 ## License
 
 © Goshgar Hasanzadeh. All rights reserved.
+
+---
+
+## ☕ Support
+
+If this project is useful to you, you can support me with a coffee — thank you!
+
+**[☕ kofe.al/goshgarhasanov](https://kofe.al/goshgarhasanov)**
